@@ -1,4 +1,4 @@
-package com.example.supabese_demo_google
+package com.example.corsa
 
 import android.os.Bundle
 import android.util.Log
@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.supabese_demo_google.ui.theme.SupabesedemogoogleTheme
+import com.example.corsa.ui.theme.SupabesedemogoogleTheme
 import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
 import io.github.jan.supabase.compose.auth.composeAuth

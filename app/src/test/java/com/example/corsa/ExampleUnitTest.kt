@@ -1,4 +1,4 @@
-package com.example.supabese_demo_google
+package com.example.corsa
 
 import org.junit.Test
 

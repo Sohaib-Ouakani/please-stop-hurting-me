@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.supabese_demo_google"
+    namespace = "com.example.corsa"
     compileSdk {
         version = release(36)
     }

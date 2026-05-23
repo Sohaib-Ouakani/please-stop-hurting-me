@@ -1,4 +1,4 @@
-package com.example.supabese_demo_google
+package com.example.corsa
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

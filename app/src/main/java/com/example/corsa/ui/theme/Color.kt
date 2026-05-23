@@ -1,4 +1,4 @@
-package com.example.supabese_demo_google.ui.theme
+package com.example.corsa.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
