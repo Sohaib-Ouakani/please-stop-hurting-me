@@ -108,6 +108,8 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    //Koin
+    implementation(libs.koin.androidx.compose)
 //    implementation(libs.androidx.work.runtime)
 //    implementation(libs.androidx.concurrent.futures)
 }
