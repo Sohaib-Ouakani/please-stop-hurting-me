@@ -107,4 +107,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+//    implementation(libs.androidx.work.runtime)
+//    implementation(libs.androidx.concurrent.futures)
 }

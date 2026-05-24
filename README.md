@@ -21,3 +21,10 @@ Del prof:
 - Feed con le attività degli amici
 - Widget per interagire rapidamente con parti dell'app
 - Eventualmente integrazione con dispositivi wearable, che è particolarmente adatta al vostro progetto
+
+
+
+
+Followed(user: Users, followed: Users)
+Users(ID, Infos, Level, Sfide-Completate) 
+Runs(ID: Users, Start-Time, End-Time, Mean-Pace, Temperature, ElevationGain)

@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
+import com.example.corsa.ui.CorsaNavGraph
 import com.example.corsa.ui.theme.CorsaTheme
 import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
@@ -31,55 +33,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CorsaTheme {
-                LoginScreen {
-                    Log.i("Auth", "Login successful")
-                }
+                val navController = rememberNavController()
+                CorsaNavGraph(navController)
             }
-        }
-    }
-}
-
-@Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    val authState = supabase.composeAuth.rememberSignInWithGoogle(
-        onResult = { result ->
-            when (result) {
-                is NativeSignInResult.Success -> {
-                    errorMessage = null
-                    onLoginSuccess()
-                }
-                is NativeSignInResult.ClosedByUser -> {
-                    errorMessage = "Sign-in dismissed."
-                }
-                is NativeSignInResult.Error -> {
-                    Log.e("Auth", "Error: ${result.message}")
-                    errorMessage = "Error: ${result.message}"
-                }
-                is NativeSignInResult.NetworkError -> {
-                    Log.e("Auth", "Network error: ${result.message}")
-                    errorMessage = "Network error: ${result.message}"
-                }
-            }
-        }
-    )
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(onClick = { authState.startFlow() }) {
-            Text("Sign in with Google")
-        }
-
-        errorMessage?.let { msg ->
-            Text(
-                text = msg,
-                color = Color.Red,
-                modifier = Modifier.padding(top = 16.dp)
-            )
         }
     }
 }
