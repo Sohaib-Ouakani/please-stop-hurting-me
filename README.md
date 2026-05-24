@@ -1,1 +1,1 @@
-cp ~/.android/debug.keystore ./keystore/debug.keystore
+cp ./keystore/debug.keystore ~/.android/debug.keystore
