@@ -22,7 +22,7 @@ fun CorsaNavGraph(navController: NavHostController) {
         startDestination = CorsaRoute.StatsScreen
     ) {
         composable<CorsaRoute.LoginTester> {
-            LoginScreen { }
+            LoginScreen(navController = navController) { }
         }
         composable<CorsaRoute.Home> {
             HomeScreen(navController = navController)
