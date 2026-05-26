@@ -49,7 +49,7 @@ fun BottomBar(navController: NavController) {
         // FRIENDS
         NavigationBarItem(
             selected = currentRoute?.hasRoute<CorsaRoute.LoginTester>() == true,
-            onClick = { navController.navigate(CorsaRoute.LoginTester) },
+            onClick = { navController.navigate(CorsaRoute.FriendScreen) },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Person,

@@ -1,0 +1,268 @@
+package com.example.corsa.ui.screens.friends
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material3.Card
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.corsa.ui.composables.BottomBar
+import com.example.corsa.ui.composables.TopBar
+import com.example.corsa.ui.theme.CorsaTheme
+
+enum class StatsTab(val label: String) {
+    Rank("Classifica"),
+    Feed("Feed")
+}
+
+@Composable
+fun FriendsScreen(navController: NavController) {
+    var selectedTab by remember { mutableStateOf(StatsTab.Rank) }
+    val tabs = StatsTab.entries
+    val cs = MaterialTheme.colorScheme
+
+    Scaffold(
+        topBar = { TopBar(navController) },
+        bottomBar = { BottomBar(navController) },
+        floatingActionButton = { FloatingActionButton(
+            onClick = {},
+            modifier = Modifier.size(56.dp)
+        ) {
+            Icon(Icons.Default.PersonAdd, "Add Friends")
+        } }
+    ) { contentPadding ->
+        Column(modifier = Modifier.padding(contentPadding)) {
+            // ── first Space  ────────────────────────────────────────────────
+
+            Spacer(Modifier.height(16.dp))
+            // ── Hero headline ────────────────────────────────────────────────
+
+            Text(
+                text = "AMICIZIA \n YEE!!!",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                color = cs.onSurface,
+                fontWeight = FontWeight.ExtraBold,
+                fontStyle = FontStyle.Italic,
+                fontSize = 30.sp,
+                lineHeight = 45.sp,
+                textAlign = TextAlign.Center,
+            )
+            // ── Search bar  ────────────────────────────────────────────────
+
+            //to do
+
+            // ── Primary Row  ────────────────────────────────────────────────
+            PrimaryTabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
+                tabs.forEach { tab ->
+                    Tab(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        text = { Text(tab.label) }
+                    )
+                }
+            }
+
+            when (selectedTab) {
+                StatsTab.Rank -> Rank()
+                StatsTab.Feed -> Feed()
+            }
+        }
+    }
+}
+
+@Composable
+fun Feed() {
+
+}
+
+enum class RankTab(val label: String) {
+    Kilometers("Kilometri"),
+    Level("Livello")
+}
+
+@Composable
+fun Rank(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
+    var rankSelectedTab by remember { mutableStateOf(RankTab.Kilometers) }
+    val tabs = RankTab.entries
+
+    LaunchedEffect(rankSelectedTab) {
+        //add function to view model for the order
+        viewModel.loadRanking(
+            when (rankSelectedTab) {
+                RankTab.Kilometers -> SortBy.Kilometers
+                RankTab.Level      -> SortBy.Level
+            }
+        )
+    }
+
+    val entries by viewModel.entries.collectAsStateWithLifecycle()
+
+    Column {
+        SecondaryTabRow(selectedTabIndex = tabs.indexOf(rankSelectedTab)) {
+            tabs.forEach { tab ->
+                Tab(
+                    selected = rankSelectedTab == tab,
+                    onClick = { rankSelectedTab = tab },
+                    text = { Text(tab.label) }
+                )
+            }
+        }
+
+        RankList(
+            entries = entries,
+            sortBy  = when (rankSelectedTab) {
+                RankTab.Kilometers -> SortBy.Kilometers
+                RankTab.Level      -> SortBy.Level
+            }
+        )
+    }
+}
+
+@Composable
+fun RankList(entries: List<UserRankEntry>, sortBy: SortBy) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 80.dp),
+    ) {
+        itemsIndexed(entries) { index, entry ->
+            RankCard(
+                position = index + 1,
+                entry    = entry,
+                sortBy   = sortBy,
+            )
+        }
+    }
+}
+
+@Composable
+fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {}
+    ) {
+        Row(
+            modifier              = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier            = Modifier.width(28.dp),
+            ) {
+                if (position == 1) {
+                    Icon(
+                        imageVector        = Icons.Outlined.EmojiEvents, // trofeo
+                        contentDescription = "1st place",
+                        tint = MaterialTheme.colorScheme.background,
+                        modifier           = Modifier.size(20.dp),
+                    )
+                }
+                Text(
+                    text       = "$position",
+                    style      = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color      = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            // Sostituisci Box con AsyncImage (Coil) quando hai le foto reali
+            Box(
+                modifier         = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text  = entry.displayName.first().uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = entry.displayName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+
+                    )
+            }
+            val (statLabel, statValue) = when (sortBy) {
+                SortBy.Kilometers -> "KM"  to "%.1f".format(entry.weekKm)
+                SortBy.Level      -> "LVL" to entry.level.toString()
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text       = statValue,
+                    style      = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                )
+                Text(
+                    text  = statLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun RankListPreview() {
+    val fakeEntries = listOf(
+        UserRankEntry("1", "J. Donahue", null, 64.2, 5),
+        UserRankEntry("2", "A. Smith",   null, 58.9, 4),
+        UserRankEntry("3", "M. Tanaka",  null, 45.1, 3),
+    )
+
+    CorsaTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            fakeEntries.forEachIndexed { index, entry ->
+                RankCard(position = index + 1, entry = entry, sortBy = SortBy.Kilometers)
+            }
+        }
+    }
+}
