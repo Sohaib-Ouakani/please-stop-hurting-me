@@ -1,5 +1,6 @@
 package com.example.corsa.ui.screens.home
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -39,24 +40,31 @@ data class StopWatchStatus(
         }
 }
 
-class HomeViewModel: ViewModel() {
-    companion object {
-        val state = HomeState(
-            50.0,
-            25.0,
-            0.5,
-            "Galeata"
-        )
+data class StopWatchAction(
+    val start: () -> Unit,
+    val pause: () -> Unit,
+    val stop: () -> Unit,
+)
 
-        val stopWatchState = StopWatchStatus()
-    }
+class HomeViewModel: ViewModel() {
+    val stopWatchActions = StopWatchAction(
+        { start() },
+        { pause() },
+        { reset() }
+    )
+    val state = HomeState(
+        50.0,
+        25.0,
+        0.5,
+        "Galeata"
+    )
 
     private val _timerState = MutableStateFlow(StopWatchStatus())
     val timerState: StateFlow<StopWatchStatus> = _timerState
 
     private var timerJob: Job? = null
 
-    fun start() {
+    private fun start() {
         if (_timerState.value.isRunning) return
         _timerState.update { it.copy(isRunning = true) }
         timerJob = viewModelScope.launch {
@@ -71,12 +79,12 @@ class HomeViewModel: ViewModel() {
         }
     }
 
-    fun pause() {
+    private fun pause() {
         timerJob?.cancel()
         _timerState.update { it.copy(isRunning = false) }
     }
 
-    fun reset() {
+    private fun reset() {
         pause()
         _timerState.update { current ->
             current.copy(

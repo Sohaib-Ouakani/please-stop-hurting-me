@@ -3,6 +3,8 @@ package com.example.corsa.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,12 +41,14 @@ fun CorsaNavGraph(navController: NavHostController) {
             LoginScreen(navController = navController) { }
         }
         composable<CorsaRoute.Home> {
-            val state = HomeViewModel.state
+            val homeViewModel = koinViewModel<HomeViewModel>()
+            val state = homeViewModel.state
             HomeScreen(state, navController)
         }
         composable<CorsaRoute.StopWatchScreen> {
-            val state = HomeViewModel.stopWatchState
-            StopWatchScreen(state, navController)
+            val homeViewModel = koinViewModel<HomeViewModel>()
+            val timerState by homeViewModel.timerState.collectAsStateWithLifecycle()
+            StopWatchScreen(timerState, navController, homeViewModel.stopWatchActions)
         }
         composable<CorsaRoute.StatsScreen> {
             StatsScreen(navController = navController)
