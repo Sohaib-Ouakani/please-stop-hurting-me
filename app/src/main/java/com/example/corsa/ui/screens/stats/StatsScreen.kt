@@ -1,8 +1,18 @@
 package com.example.corsa.ui.screens.stats
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
@@ -14,6 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.corsa.ui.composables.BottomBar
 import com.example.corsa.ui.composables.TopBar
@@ -27,12 +42,41 @@ enum class StatsTab(val label: String) {
 fun StatsScreen(navController: NavController) {
     var selectedTab by remember { mutableStateOf(StatsTab.Rank) }
     val tabs = StatsTab.entries
+    val cs = MaterialTheme.colorScheme
 
     Scaffold(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) },
+        floatingActionButton = { FloatingActionButton(
+            onClick = {},
+            modifier = Modifier.size(56.dp)
+        ) {
+            Icon(Icons.Outlined.Add, "Add Friends")
+        } }, floatingActionButtonPosition = FabPosition.Center
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
+            // ── first Space  ────────────────────────────────────────────────
+
+            Spacer(Modifier.height(16.dp))
+            // ── Hero headline ────────────────────────────────────────────────
+
+            Text(
+                text = "WEEKLY \n LEADERBOARD",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                color = cs.onSurface,
+                fontWeight = FontWeight.ExtraBold,
+                fontStyle = FontStyle.Italic,
+                fontSize = 30.sp,
+                lineHeight = 45.sp,
+                textAlign = TextAlign.Center,
+            )
+            // ── Search bar  ────────────────────────────────────────────────
+
+            //to do
+
+            // ── Primary Row  ────────────────────────────────────────────────
             PrimaryTabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
                 tabs.forEach { tab ->
                     Tab(
@@ -78,8 +122,13 @@ fun Rank() {
         }
 
         when (rankSelectedTab) {
-            RankTab.Kilometers -> { }
-            RankTab.Level -> { }
+            RankTab.Kilometers -> RankTab()
+            RankTab.Level -> RankTab()
         }
     }
+}
+
+@Composable
+fun RankTab() {
+
 }
