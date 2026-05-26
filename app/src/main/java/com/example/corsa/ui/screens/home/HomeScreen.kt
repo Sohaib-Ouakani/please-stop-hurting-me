@@ -60,6 +60,7 @@ fun HomeScreen(
             Spacer(Modifier.height(Spacing.md))
 
             // ── Location label ───────────────────────────────────────────────
+            // TODO: we can add new label to display other stats, like meteo
             LocationLabel(cs, state.locationName)
 
             Spacer(Modifier.height(Spacing.md))
@@ -90,6 +91,7 @@ fun HomeScreen(
                 state.currentKm,
                 state.progress
             )
+            // TODO: we can add new cards to display other stats, like meteo
         }
     }
 }
