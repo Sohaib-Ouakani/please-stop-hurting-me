@@ -7,20 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.Card
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,15 +39,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.corsa.ui.composables.BottomBar
 import com.example.corsa.ui.composables.TopBar
 import com.example.corsa.ui.theme.CorsaTheme
@@ -111,10 +112,138 @@ fun FriendsScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun Feed() {
+// ── Feed part  ────────────────────────────────────────────────
 
+@Composable
+fun Feed(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
+    LaunchedEffect(Unit) {
+        viewModel.loadFeed()
+    }
+    val entries by viewModel.feedEntry.collectAsStateWithLifecycle()
+    Column {
+        FeedList(
+            entries = entries,
+        )
+    }
 }
+
+
+@Composable
+fun FeedList(entries: List<RunFeedEntry>) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        contentPadding = PaddingValues(Spacing.sm, Spacing.sm, Spacing.sm, 80.dp),
+    ) {
+        items(entries) { entry ->
+            FeedCard(entry = entry)
+        }
+    }
+}
+
+
+@Composable
+fun FeedCard(entry: RunFeedEntry) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+
+        // ── Immagine percorso (elemento principale) ───────────────────
+        if (entry.pathUrl != null) {
+            AsyncImage(
+                model              = entry.pathUrl,
+                contentDescription = "Percorso corsa",
+                contentScale       = ContentScale.Crop,
+                modifier           = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+            )
+        } else {
+            // Placeholder se non c'è immagine
+            Box(
+                modifier         = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector        = Icons.Outlined.Map,
+                    contentDescription = null,
+                    tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier           = Modifier.size(48.dp),
+                )
+            }
+        }
+
+        // ── Informazioni sotto l'immagine ─────────────────────────────
+        Row(
+            modifier              = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            // Avatar
+            Box(
+                modifier         = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (entry.avatarUrl != null) {
+                    AsyncImage(
+                        model              = entry.avatarUrl,
+                        contentDescription = null,
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Text(
+                        text  = entry.displayName.first().uppercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text       = entry.displayName,
+                    style      = MaterialTheme.typography.labelLarge,
+                )
+                Text(
+                    text  = formatFeedDate(entry.startTime),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text       = "%.2f".format(entry.distance),
+                    style      = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text  = "KM",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+// ── Helper per formattare la data ─────────────────────────────────────────────
+fun formatFeedDate(isoString: String): String {
+    return try {
+        val dt        = java.time.OffsetDateTime.parse(isoString)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy · HH:mm", java.util.Locale.getDefault())
+        dt.format(formatter) // es. "26 mag 2026 · 10:30"
+    } catch (e: Exception) {
+        isoString
+    }
+}
+
+
+// ── Rank part  ────────────────────────────────────────────────
 
 enum class RankTab(val label: String) {
     Kilometers("Kilometri"),
@@ -136,7 +265,7 @@ fun Rank(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
         )
     }
 
-    val entries by viewModel.entries.collectAsStateWithLifecycle()
+    val entries by viewModel.rankEntries.collectAsStateWithLifecycle()
 
     Column {
         SecondaryTabRow(selectedTabIndex = tabs.indexOf(rankSelectedTab)) {
@@ -242,6 +371,7 @@ fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
     }
 }
 
+// ── Preview  ────────────────────────────────────────────────
 
 @Preview(showBackground = true)
 @Composable
