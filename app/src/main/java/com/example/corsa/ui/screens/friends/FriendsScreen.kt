@@ -50,6 +50,7 @@ import androidx.navigation.NavController
 import com.example.corsa.ui.composables.BottomBar
 import com.example.corsa.ui.composables.TopBar
 import com.example.corsa.ui.theme.CorsaTheme
+import com.example.corsa.ui.theme.Spacing
 
 enum class StatsTab(val label: String) {
     Rank("Classifica"),
@@ -82,12 +83,9 @@ fun FriendsScreen(navController: NavController) {
                 text = "AMICIZIA \n YEE!!!",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = Spacing.lg),
                 color = cs.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontStyle = FontStyle.Italic,
-                fontSize = 30.sp,
-                lineHeight = 45.sp,
+                style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
             // ── Search bar  ────────────────────────────────────────────────
@@ -164,8 +162,8 @@ fun Rank(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
 @Composable
 fun RankList(entries: List<UserRankEntry>, sortBy: SortBy) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 80.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        contentPadding = PaddingValues(Spacing.sm, Spacing.sm, Spacing.sm, 80.dp),
     ) {
         itemsIndexed(entries) { index, entry ->
             RankCard(
@@ -184,9 +182,9 @@ fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
         onClick = {}
     ) {
         Row(
-            modifier              = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier              = Modifier.padding(Spacing.md, Spacing.md),
             verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -196,14 +194,13 @@ fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
                     Icon(
                         imageVector        = Icons.Outlined.EmojiEvents, // trofeo
                         contentDescription = "1st place",
-                        tint = MaterialTheme.colorScheme.background,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier           = Modifier.size(20.dp),
                     )
                 }
                 Text(
                     text       = "$position",
                     style      = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
                     color      = MaterialTheme.colorScheme.onSurface,
                 )
             }
@@ -223,9 +220,7 @@ fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = entry.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-
+                    style = MaterialTheme.typography.labelLarge,
                     )
             }
             val (statLabel, statValue) = when (sortBy) {
@@ -236,7 +231,6 @@ fun RankCard(position: Int, entry: UserRankEntry, sortBy: SortBy) {
                 Text(
                     text       = statValue,
                     style      = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
                 )
                 Text(
                     text  = statLabel,
@@ -259,7 +253,7 @@ fun RankListPreview() {
     )
 
     CorsaTheme {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             fakeEntries.forEachIndexed { index, entry ->
                 RankCard(position = index + 1, entry = entry, sortBy = SortBy.Kilometers)
             }
