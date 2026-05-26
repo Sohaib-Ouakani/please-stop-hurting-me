@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.corsa.ui.CorsaRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +78,7 @@ fun TopBar( navController: NavController)  {
         },
 
         navigationIcon = {
-            IconButton(onClick = {  }) {
+            IconButton(onClick = { navController.navigate(CorsaRoute.ProfileScreen) }) {
                 Icon(
                     imageVector = Icons.Filled.Person,
                     contentDescription = "Profile",

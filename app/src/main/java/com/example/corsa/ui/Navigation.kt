@@ -9,6 +9,7 @@ import com.example.corsa.ui.screens.auth.LoginScreen
 import com.example.corsa.ui.screens.auth.RegisterScreen
 import com.example.corsa.ui.screens.home.HomeScreen
 import com.example.corsa.ui.screens.logintester.LoginScreen
+import com.example.corsa.ui.screens.profile.ProfileScreen
 import com.example.corsa.ui.screens.stats.StatsScreen
 import kotlinx.serialization.Serializable
 
@@ -19,6 +20,7 @@ sealed interface CorsaRoute {
     @Serializable data object AuthScreen : CorsaRoute
     @Serializable data object LoginScreen : CorsaRoute
     @Serializable data object RegisterScreen : CorsaRoute
+    @Serializable data object ProfileScreen : CorsaRoute
 }
 
 @Composable
@@ -44,6 +46,9 @@ fun CorsaNavGraph(navController: NavHostController) {
         }
         composable<CorsaRoute.RegisterScreen> {
             RegisterScreen(navController = navController)
+        }
+        composable<CorsaRoute.ProfileScreen> {
+            ProfileScreen(navController = navController)
         }
     }
 }

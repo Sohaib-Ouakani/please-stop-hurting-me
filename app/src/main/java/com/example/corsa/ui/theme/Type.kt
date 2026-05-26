@@ -31,5 +31,10 @@ val Typography = Typography(
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
         letterSpacing = 1.sp,
+    ),
+    titleSmall = TextStyle(
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 18.sp,
+        letterSpacing = 2.sp,
     )
 )
