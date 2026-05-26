@@ -1,18 +1,15 @@
 package com.example.corsa.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
+import com.example.corsa.ui.composables.AppBarText
+import com.example.corsa.ui.theme.Spacing
 
 @Composable
 fun AuthScreen(
@@ -25,10 +22,9 @@ fun AuthScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = Spacing.lg),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Hero text pushed toward the center
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -38,25 +34,21 @@ fun AuthScreen(
                 HeroText()
             }
 
-            // Buttons at the bottom
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(bottom = Spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 Button(
                     onClick = { navController.navigate(CorsaRoute.LoginScreen) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .height(Spacing.xxl),
+                    shape = MaterialTheme.shapes.large,
                 ) {
                     Text(
                         text = "Log In",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        letterSpacing = 1.sp,
                     )
                 }
 
@@ -64,14 +56,11 @@ fun AuthScreen(
                     onClick = { navController.navigate(CorsaRoute.RegisterScreen) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .height(Spacing.xxl),
+                    shape = MaterialTheme.shapes.large,
                 ) {
                     Text(
                         text = "Create Account",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        letterSpacing = 1.sp,
                     )
                 }
             }
@@ -83,15 +72,7 @@ fun AuthScreen(
 @Composable
 fun LoginTopBar() {
     CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = "Korsa",
-                fontWeight = FontWeight.ExtraBold,
-                fontStyle = FontStyle.Italic,
-                fontSize = 28.sp,
-                letterSpacing = 2.sp,
-            )
-        },
+        title = { AppBarText() },
     )
 }
 
@@ -101,14 +82,8 @@ fun HeroText() {
         text = "READY TO\nMOVE?",
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        fontWeight = FontWeight.ExtraBold,
-        fontStyle = FontStyle.Italic,
-        fontSize = 56.sp,
-        lineHeight = 58.sp,
+            .padding(horizontal = Spacing.lg),
+        style = MaterialTheme.typography.displayLarge,
         textAlign = TextAlign.Center,
     )
 }
-
-
-

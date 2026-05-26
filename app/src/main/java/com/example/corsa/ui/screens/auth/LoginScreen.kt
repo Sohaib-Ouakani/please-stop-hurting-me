@@ -1,7 +1,6 @@
 package com.example.corsa.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -12,15 +11,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.corsa.ui.composables.AppBarText
+import com.example.corsa.ui.theme.Spacing
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -35,31 +32,32 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = Spacing.lg),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "WELCOME BACK!\n",
+            // Hero text
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                fontWeight = FontWeight.ExtraBold,
-                fontStyle = FontStyle.Italic,
-                fontSize = 56.sp,
-                lineHeight = 58.sp,
-                textAlign = TextAlign.Center,
-            )
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "WELCOME\nBACK!",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.lg),
+                    style = MaterialTheme.typography.displayLarge,
+                    textAlign = TextAlign.Center,
+                )
+            }
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(bottom = Spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
-                // Fields
-                Spacer(modifier = Modifier.height(8.dp))
                 EmailField(email = email, onEmailChange = { email = it })
                 PasswordField(
                     password = password,
@@ -67,10 +65,9 @@ fun LoginScreen(navController: NavController) {
                     passwordVisible = passwordVisible,
                     onToggleVisibility = { passwordVisible = !passwordVisible }
                 )
-                // Buttons
                 LoginDivider()
-                GoogleButton(onClick = { /* viewModel.loginWithGoogle() */ })
-                LoginButton(onClick = { /* viewModel.loginWithEmail(email, password) */ })
+                GoogleButton(onClick = { /* TODO: hook up Google login */ })
+                LoginButton(onClick = { /* TODO: hook up email login */ })
             }
         }
     }
@@ -80,15 +77,7 @@ fun LoginScreen(navController: NavController) {
 @Composable
 private fun LoginScreenTopBar(onBack: () -> Unit) {
     CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = "Korsa",
-                fontWeight = FontWeight.ExtraBold,
-                fontStyle = FontStyle.Italic,
-                fontSize = 28.sp,
-                letterSpacing = 2.sp,
-            )
-        },
+        title = { AppBarText() },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
@@ -109,7 +98,7 @@ private fun EmailField(email: String, onEmailChange: (String) -> Unit) {
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     )
 }
 
@@ -138,7 +127,7 @@ private fun PasswordField(
             }
         },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     )
 }
 
@@ -148,15 +137,10 @@ private fun LoginButton(onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(14.dp),
+            .height(Spacing.xxl),
+        shape = MaterialTheme.shapes.large,
     ) {
-        Text(
-            text = "Log In",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            letterSpacing = 1.sp,
-        )
+        Text(text = "Log In")
     }
 }
 
@@ -166,15 +150,10 @@ private fun GoogleButton(onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(14.dp),
+            .height(Spacing.xxl),
+        shape = MaterialTheme.shapes.large,
     ) {
-        Text(
-            text = "Continue with Google",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            letterSpacing = 1.sp,
-        )
+        Text(text = "Continue with Google")
     }
 }
 
@@ -183,7 +162,7 @@ private fun LoginDivider() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         HorizontalDivider(modifier = Modifier.weight(1f))
         Text(

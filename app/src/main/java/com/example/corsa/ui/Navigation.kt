@@ -25,7 +25,7 @@ sealed interface CorsaRoute {
 fun CorsaNavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = CorsaRoute.LoginScreen
+        startDestination = CorsaRoute.AuthScreen
     ) {
         composable<CorsaRoute.LoginTester> {
             LoginScreen(navController = navController) { }
