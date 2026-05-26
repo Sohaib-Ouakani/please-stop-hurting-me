@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -167,11 +168,10 @@ private fun GoalCard(
             .fillMaxWidth()
             .padding(horizontal = Spacing.md),  // was 16.dp → Spacing.md
         shape = MaterialTheme.shapes.medium,    // was RoundedCornerShape(16.dp) → CorsaShapes.medium (Spacing.md)
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
             modifier = Modifier.padding(Spacing.lg),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.cardSpacing),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
@@ -187,13 +187,21 @@ private fun GoalCard(
                         style = MaterialTheme.typography.displayMedium
                     )
                 }
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(
+                    progress = { progress.toFloat() },
+
+                )
+                Spacer(
+                    modifier = Modifier.height(Spacing.sm)
+                )
                 Text(
                     text = "%.2f KM".format(currentKm),
                     color = cs.primary,
                     style = MaterialTheme.typography.displaySmall
-                )
-                LinearProgressIndicator(
-                    progress = { progress.toFloat() }
                 )
             }
         }
