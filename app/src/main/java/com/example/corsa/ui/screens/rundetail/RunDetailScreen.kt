@@ -1,6 +1,7 @@
 package com.example.corsa.ui.screens.rundetail
 
 import android.graphics.Color
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,6 +44,8 @@ import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import androidx.core.graphics.toColorInt
+import com.example.corsa.utils.latLngs
+import com.example.corsa.utils.parseRunGeoJson
 import org.maplibre.geojson.Polygon
 
 
@@ -123,26 +126,29 @@ fun RunDetailScreen(
 //    }
 //}
 
+// ── Map ───────────────────────────────────────────────────────────────────
+private const val ROUTE_COLOR     = "#FF4500"   // vivid orange-red — easy to spot on any basemap
+private const val ROUTE_WIDTH     = 5f
+
 @Composable
 fun RunDetailMap(
     geoJson: String,
     modifier: Modifier = Modifier
 ) {
-    val context       = LocalContext.current
+    val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Initialize MapLibre once per process — safe to call multiple times
     MapLibre.getInstance(context)
 
+    // Hoist MapView so lifecycle observer and AndroidView share the same instance
     val mapView = remember { MapView(context) }
 
-    // Forward Compose lifecycle → MapView lifecycle callbacks
     DisposableEffect(lifecycleOwner) {
         val observer = object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner)   { mapView.onStart() }
-            override fun onResume(owner: LifecycleOwner)  { mapView.onResume() }
-            override fun onPause(owner: LifecycleOwner)   { mapView.onPause() }
-            override fun onStop(owner: LifecycleOwner)    { mapView.onStop() }
+            override fun onStart(owner: LifecycleOwner)  { mapView.onStart() }
+            override fun onResume(owner: LifecycleOwner) { mapView.onResume() }
+            override fun onPause(owner: LifecycleOwner)  { mapView.onPause() }
+            override fun onStop(owner: LifecycleOwner)   { mapView.onStop() }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -152,63 +158,65 @@ fun RunDetailMap(
     }
 
     AndroidView(
-        factory = { mapView },
-        modifier = modifier,
-        update = { mv ->
-            mv.getMapAsync { map ->
-                map.setStyle(MAP_STYLE_URL) { style ->
+        // ── factory: runs ONCE — set up style, source, layer, camera here ──
+        factory = { _ ->
+            mapView.also { mv ->
+                mv.getMapAsync { map ->
+                    map.setStyle(MAP_STYLE_URL) { style ->
+                        val fc = parseRunGeoJson(geoJson)
+                        val latLngs = fc.latLngs()
 
-                    // Guard: don't add source/layer if already present
-                    if (style.getSource(ROUTE_SOURCE_ID) == null) {
-                        val featureCollection = runCatching {
-                            FeatureCollection.fromJson(geoJson).features()!![0].geometry() as Polygon
-                        }.getOrNull()
+                        Log.d("RunDetailMap", "Feature count: ${fc.features()?.size}")
+                        Log.d("RunDetailMap", "LatLng count: ${latLngs.size}")
 
-                        val source = if (featureCollection != null) {
-                            GeoJsonSource(ROUTE_SOURCE_ID, featureCollection)
-                        } else {
-                            GeoJsonSource(
-                                ROUTE_SOURCE_ID,
-                                Feature.fromGeometry(LineString.fromJson(geoJson))
-                            )
-                        }
-                        style.addSource(source)
-                    }
+                        // 1. Source
+                        style.addSource(GeoJsonSource(ROUTE_SOURCE_ID, fc))
 
-                    if (style.getLayer(ROUTE_LAYER_ID) == null) {
+                        // 2. Layer (source must already be added above)
                         style.addLayer(
-                            LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).withProperties(
-                                PropertyFactory.lineColor("#E53935".toColorInt()),
-                                PropertyFactory.lineWidth(4f),
-                                PropertyFactory.lineCap("round"),
-                                PropertyFactory.lineJoin("round")
-                            )
+                            LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID)
+                                .withProperties(
+                                    PropertyFactory.lineColor(ROUTE_COLOR.toColorInt()),
+                                    PropertyFactory.lineWidth(ROUTE_WIDTH),
+                                    PropertyFactory.lineCap("round"),
+                                    PropertyFactory.lineJoin("round")
+                                )
                         )
-                    }
 
-                    // Camera fit — same as before
-                    val coordinates = runCatching {
-                        FeatureCollection.fromJson(geoJson)
-                            .features()
-                            ?.flatMap { feature ->
-                                val geom = feature?.geometry()
-                                if (geom is LineString) geom.coordinates() else emptyList()
+                        // 3. Camera
+
+                        when {
+                            latLngs.size >= 2 -> {
+                                val bounds = LatLngBounds.Builder()
+                                    .includes(latLngs)
+                                    .build()
+                                val paddingPx = (80 * context.resources.displayMetrics.density).toInt()
+                                map.easeCamera(
+                                    CameraUpdateFactory.newLatLngBounds(
+                                        bounds,
+                                        paddingPx, paddingPx, paddingPx, paddingPx
+                                    ),
+                                    600
+                                )
                             }
-                            ?.filterNotNull()
-                    }.getOrNull()
-
-                    if (!coordinates.isNullOrEmpty()) {
-                        val boundsBuilder = LatLngBounds.Builder()
-                        coordinates.forEach { point ->
-                            boundsBuilder.include(
-                                org.maplibre.android.geometry.LatLng(point.latitude(), point.longitude())
-                            )
-                        }
-                        runCatching { boundsBuilder.build() }.getOrNull()?.let { bounds ->
-                            map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 80))
+                            latLngs.size == 1 -> {
+                                map.easeCamera(
+                                    CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14.0),
+                                    600
+                                )
+                            }
                         }
                     }
                 }
+            }
+        },
+        modifier = modifier,
+        // ── update: runs on recomposition — only refresh source data ──────
+        update = { mv ->
+            mv.getMapAsync { map ->
+                val style = map.style ?: return@getMapAsync
+                (style.getSource(ROUTE_SOURCE_ID) as? GeoJsonSource)
+                    ?.setGeoJson(parseRunGeoJson(geoJson))
             }
         }
     )
