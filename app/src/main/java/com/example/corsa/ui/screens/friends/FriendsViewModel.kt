@@ -2,8 +2,6 @@ package com.example.corsa.ui.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.corsa.data.remote.supabase
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -27,9 +25,16 @@ data class RunFeedEntry(
     val distance: Double
 )
 
+data class Friends(
+    val friendsName: List<String>
+)
+
 enum class SortBy { Kilometers, Level }
 
-class FriendViewModel : ViewModel() {
+class FriendsViewModel : ViewModel() {
+    val friendList = Friends(
+        listOf("Rossi", "Io", "Gardo", "Pelats", "Aguzzi", "Cloe")
+    )
     private val _rankEntries = MutableStateFlow<List<UserRankEntry>>(emptyList())
     private val _feedEntries = MutableStateFlow<List<RunFeedEntry>>(emptyList())
     val rankEntries: StateFlow<List<UserRankEntry>> = _rankEntries

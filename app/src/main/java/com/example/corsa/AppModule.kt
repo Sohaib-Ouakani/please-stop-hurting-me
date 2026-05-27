@@ -1,6 +1,7 @@
 package com.example.corsa
 
 import com.example.corsa.data.remote.supabase
+import com.example.corsa.ui.screens.friends.FriendsViewModel
 import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.logintester.LoginTesterViewModel
 import org.koin.core.module.dsl.viewModel
@@ -12,4 +13,6 @@ val appModule = module {
     viewModel { LoginTesterViewModel(get()) }
 
     viewModel { HomeViewModel() }
+
+    viewModel { FriendsViewModel() }
 }

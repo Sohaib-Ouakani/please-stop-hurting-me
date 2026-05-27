@@ -3,7 +3,6 @@ package com.example.corsa.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,6 +11,7 @@ import com.example.corsa.ui.screens.friends.FriendsScreen
 import com.example.corsa.ui.screens.auth.AuthScreen
 import com.example.corsa.ui.screens.auth.LoginScreen
 import com.example.corsa.ui.screens.auth.RegisterScreen
+import com.example.corsa.ui.screens.friends.FriendsViewModel
 import com.example.corsa.ui.screens.home.HomeScreen
 import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.home.StopWatchScreen
@@ -57,7 +57,8 @@ fun CorsaNavGraph(navController: NavHostController) {
             StatsScreen(navController = navController)
         }
         composable<CorsaRoute.FriendsScreen> {
-            FriendsScreen(navController = navController)
+            val friendsVM = koinViewModel<FriendsViewModel>()
+            FriendsScreen(navController, friendsVM)
         }
         composable<CorsaRoute.AuthScreen> {
             AuthScreen(navController = navController)

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,8 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,8 +57,12 @@ enum class StatsTab(val label: String) {
     Feed("Feed")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsScreen(navController: NavController) {
+fun FriendsScreen(
+    navController: NavController,
+    viewModel: FriendsViewModel
+) {
     var selectedTab by remember { mutableStateOf(StatsTab.Rank) }
     val tabs = StatsTab.entries
     val cs = MaterialTheme.colorScheme
@@ -80,18 +83,20 @@ fun FriendsScreen(navController: NavController) {
             Spacer(Modifier.height(16.dp))
             // ── Hero headline ────────────────────────────────────────────────
 
-            Text(
-                text = "AMICIZIA \n YEE!!!",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg),
-                color = cs.onSurface,
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-            )
+//            Text(
+//                text = "AMICIZIA \n YEE!!!",
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = Spacing.lg),
+//                color = cs.onSurface,
+//                style = MaterialTheme.typography.titleMedium,
+//                textAlign = TextAlign.Center,
+//            )
             // ── Search bar  ────────────────────────────────────────────────
-
-            //to do
+            //TODO
+//            SearchBar(
+//
+//            )
 
             // ── Primary Row  ────────────────────────────────────────────────
             PrimaryTabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
@@ -105,8 +110,8 @@ fun FriendsScreen(navController: NavController) {
             }
 
             when (selectedTab) {
-                StatsTab.Rank -> Rank()
-                StatsTab.Feed -> Feed()
+                StatsTab.Rank -> Rank(viewModel)
+                StatsTab.Feed -> Feed(viewModel)
             }
         }
     }
@@ -115,7 +120,7 @@ fun FriendsScreen(navController: NavController) {
 // ── Feed part  ────────────────────────────────────────────────
 
 @Composable
-fun Feed(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
+fun Feed(viewModel: FriendsViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadFeed()
     }
@@ -251,7 +256,7 @@ enum class RankTab(val label: String) {
 }
 
 @Composable
-fun Rank(viewModel: FriendViewModel = viewModel<FriendViewModel>()) {
+fun Rank(viewModel: FriendsViewModel) {
     var rankSelectedTab by remember { mutableStateOf(RankTab.Kilometers) }
     val tabs = RankTab.entries
 
