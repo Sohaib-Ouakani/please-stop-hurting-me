@@ -122,6 +122,18 @@ fun RunDetailMap(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+
+    // Simplest possible MapLibre map — no token needed, uses a free OSM style
+//    MapLibre(
+//        modifier = modifier,
+//        mapViewportState = rememberMapViewportState {
+//            setCameraOptions {
+//                center(Point.fromLngLat(9.1200, 45.4654)) // fake coords from FakeRunsRepository
+//                zoom(13.0)
+//            }
+//        },
+//        styleUri = "https://demotiles.maplibre.org/style.json" // free MapLibre demo tiles
+//    )
 }
 
 // ── Bottom sheet content ──────────────────────────────────────────────────
