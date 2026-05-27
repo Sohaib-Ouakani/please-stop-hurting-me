@@ -115,9 +115,4 @@ dependencies {
 
     //For MapLibre
     implementation(libs.android.sdk)
-    // Official Compose wrapper (wraps the core above, no extra setup)
-    implementation(libs.maplibre.compose.android)
-    // GeoJSON utils — LineString.fromJson() lives here
-    implementation(libs.android.sdk.geojson)
-
 }

@@ -1,5 +1,6 @@
 package com.example.corsa.ui.screens.rundetail
 
+import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,30 @@ import com.example.corsa.utils.formatDistance
 import com.example.corsa.utils.formatDuration
 import com.example.corsa.utils.formatPace
 import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.LineString
+import androidx.core.graphics.toColorInt
+import org.maplibre.geojson.Polygon
+
+
+private const val ROUTE_SOURCE_ID = "run-route-source"
+private const val ROUTE_LAYER_ID  = "run-route-layer"
+private const val MAP_STYLE_URL   = "https://tiles.openfreemap.org/styles/liberty"
 
 // ── Fake comment model (replace with real data class later) ───────────────
 data class Comment(
@@ -78,62 +103,115 @@ fun RunDetailScreen(
 
 // ── Map ───────────────────────────────────────────────────────────────────
 
+//@Composable
+//fun RunDetailMap(
+//    geoJson: String,
+//    modifier: Modifier = Modifier
+//) {
+//    // TODO: replace Box with MapLibre MapboxMap composable and draw
+//    //       the route using geoJsonToLineString(geoJson) as a LineLayer.
+//
+//    Box(
+//        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Text(
+//            text = "Map placeholder",
+//            style = MaterialTheme.typography.bodyMedium,
+//            color = MaterialTheme.colorScheme.onSurfaceVariant
+//        )
+//    }
+//}
+
 @Composable
 fun RunDetailMap(
     geoJson: String,
     modifier: Modifier = Modifier
 ) {
-    // TODO: replace Box with MapLibre MapboxMap composable and draw
-    //       the route using geoJsonToLineString(geoJson) as a LineLayer.
-    //       Example:
-    //
-    //  val lineString = geoJsonToLineString(geoJson)
-    //  MapboxMap(
-    //      modifier = modifier,
-    //      mapViewportState = rememberMapViewportState {
-    //          setCameraOptions {
-    //              center(lineString.coordinates().first())
-    //              zoom(13.0)
-    //          }
-    //      }
-    //  ) {
-    //      MapEffect(lineString) { map ->
-    //          map.getStyle { style ->
-    //              style.addSource(GeoJsonSource("run-source", lineString))
-    //              style.addLayer(LineLayer("run-layer", "run-source").apply {
-    //                  setProperties(
-    //                      PropertyFactory.lineColor(android.graphics.Color.parseColor("#FF6600")),
-    //                      PropertyFactory.lineWidth(4f),
-    //                      PropertyFactory.lineCap(LINE_CAP_ROUND),
-    //                      PropertyFactory.lineJoin(LINE_JOIN_ROUND)
-    //                  )
-    //              })
-    //          }
-    //      }
-    //  }
+    val context       = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Map placeholder",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    // Initialize MapLibre once per process — safe to call multiple times
+    MapLibre.getInstance(context)
+
+    val mapView = remember { MapView(context) }
+
+    // Forward Compose lifecycle → MapView lifecycle callbacks
+    DisposableEffect(lifecycleOwner) {
+        val observer = object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner)   { mapView.onStart() }
+            override fun onResume(owner: LifecycleOwner)  { mapView.onResume() }
+            override fun onPause(owner: LifecycleOwner)   { mapView.onPause() }
+            override fun onStop(owner: LifecycleOwner)    { mapView.onStop() }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onDestroy()
+        }
     }
 
-    // Simplest possible MapLibre map — no token needed, uses a free OSM style
-//    MapLibre(
-//        modifier = modifier,
-//        mapViewportState = rememberMapViewportState {
-//            setCameraOptions {
-//                center(Point.fromLngLat(9.1200, 45.4654)) // fake coords from FakeRunsRepository
-//                zoom(13.0)
-//            }
-//        },
-//        styleUri = "https://demotiles.maplibre.org/style.json" // free MapLibre demo tiles
-//    )
+    AndroidView(
+        factory = { mapView },
+        modifier = modifier,
+        update = { mv ->
+            mv.getMapAsync { map ->
+                map.setStyle(MAP_STYLE_URL) { style ->
+
+                    // Guard: don't add source/layer if already present
+                    if (style.getSource(ROUTE_SOURCE_ID) == null) {
+                        val featureCollection = runCatching {
+                            FeatureCollection.fromJson(geoJson).features()!![0].geometry() as Polygon
+                        }.getOrNull()
+
+                        val source = if (featureCollection != null) {
+                            GeoJsonSource(ROUTE_SOURCE_ID, featureCollection)
+                        } else {
+                            GeoJsonSource(
+                                ROUTE_SOURCE_ID,
+                                Feature.fromGeometry(LineString.fromJson(geoJson))
+                            )
+                        }
+                        style.addSource(source)
+                    }
+
+                    if (style.getLayer(ROUTE_LAYER_ID) == null) {
+                        style.addLayer(
+                            LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID).withProperties(
+                                PropertyFactory.lineColor("#E53935".toColorInt()),
+                                PropertyFactory.lineWidth(4f),
+                                PropertyFactory.lineCap("round"),
+                                PropertyFactory.lineJoin("round")
+                            )
+                        )
+                    }
+
+                    // Camera fit — same as before
+                    val coordinates = runCatching {
+                        FeatureCollection.fromJson(geoJson)
+                            .features()
+                            ?.flatMap { feature ->
+                                val geom = feature?.geometry()
+                                if (geom is LineString) geom.coordinates() else emptyList()
+                            }
+                            ?.filterNotNull()
+                    }.getOrNull()
+
+                    if (!coordinates.isNullOrEmpty()) {
+                        val boundsBuilder = LatLngBounds.Builder()
+                        coordinates.forEach { point ->
+                            boundsBuilder.include(
+                                org.maplibre.android.geometry.LatLng(point.latitude(), point.longitude())
+                            )
+                        }
+                        runCatching { boundsBuilder.build() }.getOrNull()?.let { bounds ->
+                            map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 80))
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 // ── Bottom sheet content ──────────────────────────────────────────────────
