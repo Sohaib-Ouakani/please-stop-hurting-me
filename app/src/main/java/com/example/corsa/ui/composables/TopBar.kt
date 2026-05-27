@@ -38,7 +38,10 @@ fun TopBar(navController: NavController)  {
         title = { AppBarText() },
         actions = {
             IconButton(
-                onClick = { navController.navigate(CorsaRoute.ProfileScreen) },
+                onClick = {
+//                        navController.navigate(CorsaRoute.ProfileScreen)
+                    navController.navigate(CorsaRoute.ProfileDetailScreen("user-abc"))
+                          },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.onPrimary,
                     contentColor = MaterialTheme.colorScheme.primary,

@@ -54,11 +54,19 @@ data class UserRankEntry(
 )
 
 @Composable
-fun ProfileStats(navController: NavController, runentries: List<RunEntry>, infoentries: UserRankEntry) {
+fun ProfileStats(
+    navController: NavController,
+    runentries: List<RunEntry>,
+    infoentries: UserRankEntry,
+    header: @Composable () -> Unit = {},
+) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         contentPadding = PaddingValues(Spacing.sm, Spacing.sm, Spacing.sm, 80.dp),
     ) {
+        item {
+            header()
+        }
         // ── Griglia statica come singolo item ──────────────────────────
         item {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {

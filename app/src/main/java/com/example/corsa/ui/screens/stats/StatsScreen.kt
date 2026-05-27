@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,35 +46,43 @@ fun StatsScreen(navController: NavController) {
         Column(modifier = Modifier.padding(contentPadding)) {
 
             // ── Header: nome + avatar ──────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween, // nome a sx, avatar a dx
-            ) {
-                Text(
-                    text = infoentries.displayName,
-                    color = cs.onSurface,
-                    style = MaterialTheme.typography.displayMedium,
-                    modifier = Modifier.weight(1f), // occupa lo spazio senza spingere l'avatar
-                )
-                Spacer(Modifier.width(Spacing.md))
-                Box(
-                    modifier = Modifier
-                        .size(Size.l)
-                        .clip(CircleShape)
-                        .background(cs.secondaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = infoentries.displayName.first().uppercase(),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-            }
 
-            ProfileStats(navController, runentries, infoentries)
+
+            ProfileStats(navController, runentries, infoentries, { ProfileHeader(infoentries, cs) })
+        }
+    }
+}
+
+@Composable
+private fun ProfileHeader(
+    infoentries: UserRankEntry,
+    cs: ColorScheme
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween, // nome a sx, avatar a dx
+    ) {
+        Text(
+            text = infoentries.displayName,
+            color = cs.onSurface,
+            style = MaterialTheme.typography.displayMedium,
+            modifier = Modifier.weight(1f), // occupa lo spazio senza spingere l'avatar
+        )
+        Spacer(Modifier.width(Spacing.md))
+        Box(
+            modifier = Modifier
+                .size(Size.l)
+                .clip(CircleShape)
+                .background(cs.secondaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = infoentries.displayName.first().uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }

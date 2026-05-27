@@ -18,6 +18,8 @@ import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.home.StopWatchScreen
 import com.example.corsa.ui.screens.logintester.LoginScreen
 import com.example.corsa.ui.screens.profile.ProfileScreen
+import com.example.corsa.ui.screens.profiledetail.ProfileDetailScreen
+import com.example.corsa.ui.screens.profiledetail.ProfileDetailViewModel
 import com.example.corsa.ui.screens.rundetail.RunDetailScreen
 import com.example.corsa.ui.screens.rundetail.RunDetailViewModel
 import com.example.corsa.ui.screens.stats.StatsScreen
@@ -35,6 +37,8 @@ sealed interface CorsaRoute {
     @Serializable data object LoginScreen : CorsaRoute
     @Serializable data object RegisterScreen : CorsaRoute
     @Serializable data object ProfileScreen : CorsaRoute
+    @Serializable data class ProfileDetailScreen(val userId: String) : CorsaRoute
+
     @Serializable data class RunDetailScreen(val runId: String) : CorsaRoute
 }
 
@@ -78,6 +82,10 @@ fun CorsaNavGraph(navController: NavHostController) {
         composable<CorsaRoute.RunDetailScreen> {
             val viewModel = koinViewModel<RunDetailViewModel>()
             RunDetailScreen(navController = navController, viewModel = viewModel)
+        }
+        composable<CorsaRoute.ProfileDetailScreen> {
+            val viewModel = koinViewModel<ProfileDetailViewModel>()
+            ProfileDetailScreen(navController = navController, viewModel = viewModel)
         }
     }
 }
