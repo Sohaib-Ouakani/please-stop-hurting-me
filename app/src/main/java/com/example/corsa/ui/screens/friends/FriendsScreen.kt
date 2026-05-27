@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,14 +19,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -244,14 +250,18 @@ fun FeedCard(entry: RunFeedEntry) {
 fun FriendSearchBar(viewModel: FriendsViewModel) {
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
-
-    var items = viewModel.friends.friendsName
-
-    if(query.isNotBlank()) {
-        items = items.filter { it ->
-            it.contains(query, ignoreCase = true)
-        }
+    val allFriends = viewModel.friends.friendsName
+    val filteredFriends = if (query.isBlank()) {
+        emptyList()
+    } else {
+        allFriends.filter { it.contains(query, ignoreCase = true) }
     }
+
+    LaunchedEffect(query) {
+        if (query.isBlank()) expanded = false
+    }
+
+    val searchBarShape = RoundedCornerShape(28.dp)
 
     SearchBar(
         inputField = {
@@ -262,28 +272,69 @@ fun FriendSearchBar(viewModel: FriendsViewModel) {
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
                 placeholder = { Text("Search Friends...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search"
+                    )
+                },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear search"
+                            )
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
         },
         expanded = expanded,
         onExpandedChange = { expanded = it },
+        shape = searchBarShape,
+        windowInsets = WindowInsets(0.dp),   // ✅ prevents inset from fighting the clip
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(searchBarShape)            // ✅ hard-clips the composable to stay rounded
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { traversalIndex = 1f }
         ) {
-            items.forEach { item ->
+            if (filteredFriends.isNotEmpty()) {
+                filteredFriends.forEach { friend ->
+                    ListItem(
+                        headlineContent = { Text(friend) },
+                        modifier = Modifier.clickable {
+
+                            query = friend
+                            expanded = false
+                        }
+                    )
+                }
+            } else if (query.isNotBlank()) {
                 ListItem(
-                    headlineContent = { Text(item) },
+                    headlineContent = {
+                        Text(
+                            "No friends found",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.SearchOff,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     modifier = Modifier.clickable {
-                        query = item // Autofill the bar
-                        expanded = false // Collapse the dropdown
+                        expanded = false
                     }
                 )
-            }
-            if (items.isEmpty()) {
-                ListItem(headlineContent = { Text("No results found") })
             }
         }
     }
