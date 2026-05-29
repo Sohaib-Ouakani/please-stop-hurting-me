@@ -6,10 +6,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.corsa.ui.screens.AuthStateViewModel
+import com.example.corsa.ui.screens.SessionViewModel
 import com.example.corsa.ui.screens.StartDestination
 import com.example.corsa.ui.screens.friends.FriendsScreen
 import com.example.corsa.ui.screens.auth.AuthScreen
+import com.example.corsa.ui.screens.auth.AuthViewModel
 import com.example.corsa.ui.screens.auth.LoginScreen
 import com.example.corsa.ui.screens.auth.RegisterScreen
 import com.example.corsa.ui.screens.friends.AddFriendsScreen
@@ -46,8 +47,8 @@ sealed interface CorsaRoute {
 
 @Composable
 fun CorsaNavGraph(navController: NavHostController) {
-    val authViewModel: AuthStateViewModel = koinViewModel()
-    val startDestination by authViewModel.startDestination.collectAsStateWithLifecycle()
+    val sessionViewModel = koinViewModel<SessionViewModel>()
+    val startDestination by sessionViewModel.startDestination.collectAsStateWithLifecycle()
 
     when (startDestination) {
         StartDestination.Loading -> SplashScreen()
@@ -63,13 +64,22 @@ fun CorsaNavGraph(navController: NavHostController) {
                     AuthScreen(navController = navController)
                 }
                 composable<CorsaRoute.LoginScreen> {
+                    val authViewModel = koinViewModel<AuthViewModel>()
+                    val state by authViewModel.authState.collectAsStateWithLifecycle()
                     LoginScreen(
                         navController = navController,
-                        onEmailLogin = { string: String, string1: String -> }
+                        state = state,
+                        onEmailLogin = authViewModel::loginWithEmail
                     )
                 }
                 composable<CorsaRoute.RegisterScreen> {
-                    RegisterScreen(navController = navController)
+                    val authViewModel = koinViewModel<AuthViewModel>()
+                    val state by authViewModel.authState.collectAsStateWithLifecycle()
+                    RegisterScreen(
+                        navController = navController,
+                        state = state,
+                        onEmailRegister = authViewModel::registerWithEmail
+                    )
                 }
                 composable<CorsaRoute.Home> {
                     val homeViewModel = koinViewModel<HomeViewModel>()

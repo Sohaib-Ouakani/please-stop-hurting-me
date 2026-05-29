@@ -16,9 +16,9 @@ enum class StartDestination {
     Home
 }
 
-class AuthStateViewModel(
+class SessionViewModel(
     authRepository: AuthRepository
-) : ViewModel() {
+): ViewModel() {
 
     val startDestination = MutableStateFlow(StartDestination.Loading)
 

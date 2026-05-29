@@ -1,6 +1,5 @@
 package com.example.corsa.ui.screens.auth
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.corsa.ui.composables.AppBarText
 import com.example.corsa.ui.theme.Spacing
@@ -27,6 +27,7 @@ import org.koin.compose.koinInject
 @Composable
 fun LoginScreen(
     navController: NavController,
+    state: AuthState,
     onEmailLogin: (email: String, password: String) -> Unit,
 ) {
     var email by remember { mutableStateOf("") }
@@ -37,8 +38,18 @@ fun LoginScreen(
 
     val googleAuthState = supabase.composeAuth.rememberSignInWithGoogle()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state) {
+        when (state) {
+            is AuthState.Error -> snackbarHostState.showSnackbar(state.message)
+            else -> {}
+        }
+    }
+
     Scaffold(
-        topBar = { LoginScreenTopBar(onBack = { navController.popBackStack() }) }
+        topBar = { LoginScreenTopBar(onBack = { navController.popBackStack() }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { contentPadding ->
         Column(
             modifier = Modifier
@@ -63,8 +74,14 @@ fun LoginScreen(
                     onToggleVisibility = { passwordVisible = !passwordVisible }
                 )
                 LoginDivider()
-                GoogleButton(onClick = { googleAuthState.startFlow() })
-                LoginButton(onClick = { onEmailLogin })
+                GoogleButton(
+                    onClick = { googleAuthState.startFlow() },
+                    enabled = state !is AuthState.Loading
+                )
+                LoginButton(
+                    onClick = { onEmailLogin(email, password) },
+                    isLoading = state is AuthState.Loading
+                )
             }
         }
     }
@@ -148,22 +165,32 @@ private fun PasswordField(
 }
 
 @Composable
-private fun LoginButton(onClick: () -> Unit) {
+private fun LoginButton(onClick: () -> Unit, isLoading: Boolean) {
     Button(
         onClick = onClick,
+        enabled = !isLoading,
         modifier = Modifier
             .fillMaxWidth()
             .height(Spacing.xxl),
         shape = MaterialTheme.shapes.large,
     ) {
-        Text(text = "Accedi")
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(Spacing.md),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(text = "Accedi")
+        }
     }
 }
 
 @Composable
-private fun GoogleButton(onClick: () -> Unit) {
+private fun GoogleButton(onClick: () -> Unit, enabled: Boolean) {
     OutlinedButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(Spacing.xxl),

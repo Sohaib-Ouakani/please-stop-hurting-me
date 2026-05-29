@@ -8,11 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import io.github.jan.supabase.auth.providers.builtin.Email
 
 interface AuthRepository {
-    suspend fun login(email: String, password: String): Result<Unit>
-    suspend fun register(email: String, password: String): Result<Unit>
-    suspend fun logout(): Result<Unit>
-
-
+    suspend fun login(email: String, password: String)
+    suspend fun register(email: String, password: String)
+    suspend fun logout()
     val sessionStatus: Flow<SessionStatus>
 }
 
@@ -25,21 +23,25 @@ class AuthRepositoryImpl(
     override val sessionStatus: Flow<SessionStatus>
         get() = supabase.auth.sessionStatus
 
-    override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
+    override suspend fun login(email: String, password: String) {
         supabase.auth.signInWith(Email) {
             this.email = email
             this.password = password
         }
     }
 
-    override suspend fun register(email: String, password: String): Result<Unit> = runCatching {
+    override suspend fun register(email: String, password: String) {
         supabase.auth.signUpWith(Email) {
+            this.email = email
+            this.password = password
+        }
+        supabase.auth.signInWith(Email) {
             this.email = email
             this.password = password
         }
     }
 
-    override suspend fun logout(): Result<Unit> = runCatching {
+    override suspend fun logout() {
         supabase.auth.signOut()
         cachedProfile = null
     }

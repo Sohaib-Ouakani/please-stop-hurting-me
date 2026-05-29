@@ -15,19 +15,41 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.corsa.ui.composables.AppBarText
 import com.example.corsa.ui.theme.Spacing
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
+import io.github.jan.supabase.compose.auth.composeAuth
+import org.koin.compose.koinInject
 
 @Composable
-fun RegisterScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
+fun RegisterScreen(
+    navController: NavController,
+    state: AuthState,
+    onEmailRegister: (email: String, password: String) -> Unit,
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val supabase = koinInject<SupabaseClient>()
+
+    val googleAuthState = supabase.composeAuth.rememberSignInWithGoogle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state) {
+        when (state) {
+            is AuthState.Error -> snackbarHostState.showSnackbar(state.message)
+            else -> {}
+        }
+    }
+
     Scaffold(
-        topBar = { RegisterScreenTopBar(onBack = { navController.popBackStack() }) }
+        topBar = { RegisterScreenTopBar(onBack = { navController.popBackStack() }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { contentPadding ->
         Column(
             modifier = Modifier
@@ -36,21 +58,7 @@ fun RegisterScreen(navController: NavController) {
                 .padding(horizontal = Spacing.lg),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "LET'S\nGO!",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.lg),
-                    style = MaterialTheme.typography.displayLarge,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            HeroText()
 
             Column(
                 modifier = Modifier
@@ -58,7 +66,6 @@ fun RegisterScreen(navController: NavController) {
                     .padding(bottom = Spacing.xl),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
-                UsernameField(username = username, onUsernameChange = { username = it })
                 EmailField(email = email, onEmailChange = { email = it })
                 PasswordField(
                     password = password,
@@ -67,10 +74,35 @@ fun RegisterScreen(navController: NavController) {
                     onToggleVisibility = { passwordVisible = !passwordVisible }
                 )
                 RegisterDivider()
-                GoogleButton(onClick = { /* TODO: hook up Google register */ })
-                RegisterButton(onClick = { /* TODO: hook up email register */ })
+                GoogleButton(
+                    onClick = { googleAuthState.startFlow() },
+                    enabled = state !is AuthState.Loading
+                )
+                RegisterButton(
+                    onClick = { onEmailRegister(email, password) },
+                    isLoading = state is AuthState.Loading
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun ColumnScope.HeroText() {
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "LET'S\nGO!",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg),
+            style = MaterialTheme.typography.displayLarge,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -87,19 +119,6 @@ private fun RegisterScreenTopBar(onBack: () -> Unit) {
                 )
             }
         }
-    )
-}
-
-@Composable
-private fun UsernameField(username: String, onUsernameChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = username,
-        onValueChange = onUsernameChange,
-        label = { Text("Username") },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
     )
 }
 
@@ -146,22 +165,32 @@ private fun PasswordField(
 }
 
 @Composable
-private fun RegisterButton(onClick: () -> Unit) {
+private fun RegisterButton(onClick: () -> Unit, isLoading: Boolean) {
     Button(
         onClick = onClick,
+        enabled = !isLoading,
         modifier = Modifier
             .fillMaxWidth()
             .height(Spacing.xxl),
         shape = MaterialTheme.shapes.large,
     ) {
-        Text(text = "Registrati")
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(Spacing.md),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(text = "Registrati")
+        }
     }
 }
 
 @Composable
-private fun GoogleButton(onClick: () -> Unit) {
+private fun GoogleButton(onClick: () -> Unit, enabled: Boolean) {
     OutlinedButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(Spacing.xxl),
