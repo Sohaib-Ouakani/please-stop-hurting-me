@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.corsa.data.repositories.AuthRepository
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 sealed class StartDestination {
@@ -14,39 +18,22 @@ sealed class StartDestination {
 }
 
 class AuthStateViewModel(
-    private val authRepository: AuthRepository
+    authRepository: AuthRepository
 ) : ViewModel() {
 
     val startDestination = MutableStateFlow<StartDestination>(StartDestination.Loading)
 
     init {
-        viewModelScope.launch {
-            authRepository.sessionStatus.collect { status ->
+        authRepository.sessionStatus
+            .map { status ->
                 when (status) {
-                    is SessionStatus.Authenticated -> {
-                        authRepository.getCurrentProfile()
-                            .onSuccess { profile ->
-                                startDestination.value = if (profile != null) {
-                                    StartDestination.Home
-                                } else {
-                                    StartDestination.Auth
-                                }
-                            }
-                            .onFailure {
-                                startDestination.value = StartDestination.Auth
-                            }
-                    }
-                    is SessionStatus.NotAuthenticated -> {
-                        startDestination.value = StartDestination.Auth
-                    }
-                    is SessionStatus.Initializing -> {
-                        startDestination.value = StartDestination.Loading
-                    }
-                    is SessionStatus.RefreshFailure -> {
-                        startDestination.value = StartDestination.Auth
-                    }
+                    is SessionStatus.Authenticated -> StartDestination.Home
+                    is SessionStatus.Initializing -> StartDestination.Loading
+                    else -> StartDestination.Auth
                 }
             }
-        }
+            .distinctUntilChanged()
+            .onEach { startDestination.value = it }
+            .launchIn(viewModelScope)
     }
 }
