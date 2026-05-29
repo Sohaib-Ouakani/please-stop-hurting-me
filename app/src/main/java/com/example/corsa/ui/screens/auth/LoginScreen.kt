@@ -64,7 +64,7 @@ fun LoginScreen(
                 )
                 LoginDivider()
                 GoogleButton(onClick = { googleAuthState.startFlow() })
-                LoginButton(onClick = { /* TODO: hook up email login */ })
+                LoginButton(onClick = { onEmailLogin })
             }
         }
     }
