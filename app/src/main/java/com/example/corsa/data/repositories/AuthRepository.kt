@@ -1,12 +1,9 @@
 package com.example.corsa.data.repositories
 
 import com.example.corsa.data.model.Profile
-import com.example.corsa.data.model.ProfileUpdate
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.PostgrestFilterBuilder
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
