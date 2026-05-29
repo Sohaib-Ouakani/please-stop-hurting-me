@@ -1,22 +1,37 @@
 package com.example.corsa
 
-import com.example.corsa.data.remote.supabase
+import com.example.corsa.data.repositories.AuthRepository
+import com.example.corsa.data.repositories.AuthRepositoryImpl
 import com.example.corsa.data.repositories.FakeRunsRepository
 import com.example.corsa.data.repositories.RunsRepository
+import com.example.corsa.ui.screens.MainViewModel
 import com.example.corsa.ui.screens.home.HomeViewModel
-import com.example.corsa.ui.screens.logintester.LoginTesterViewModel
 import com.example.corsa.ui.screens.rundetail.RunDetailViewModel
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.compose.auth.ComposeAuth
+import io.github.jan.supabase.compose.auth.googleNativeLogin
+import io.github.jan.supabase.createSupabaseClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
-    single { supabase }
 
-    single<RunsRepository> { FakeRunsRepository() } // TODO: make sure to change this
+    single {
+        createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
+        ) {
+            install(Auth)
+            install(ComposeAuth) {
+                googleNativeLogin(BuildConfig.GOOGLE_CLIENT_ID)
+            }
+        }
+    }
 
-    viewModel { LoginTesterViewModel(get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single<RunsRepository> { FakeRunsRepository() }
 
+    viewModel { MainViewModel(get()) }
     viewModel { HomeViewModel() }
-
     viewModel { params -> RunDetailViewModel(get(), params.get()) }
 }

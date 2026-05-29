@@ -25,7 +25,7 @@ class FakeRunsRepository : RunsRepository {
           "geometry": {
             "type": "LineString",
             "coordinates": [
-              [9.1859, 45.4654],
+              [12.003215, 44.2160733],
               [9.1875, 45.4670],
               [9.1901, 45.4682],
               [9.1923, 45.4665],
