@@ -3,11 +3,11 @@ package com.example.corsa.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import com.example.corsa.ui.screens.AuthStateViewModel
+import com.example.corsa.ui.screens.StartDestination
 import com.example.corsa.ui.screens.friends.FriendsScreen
 import com.example.corsa.ui.screens.auth.AuthScreen
 import com.example.corsa.ui.screens.auth.LoginScreen
@@ -17,18 +17,17 @@ import com.example.corsa.ui.screens.friends.FriendsViewModel
 import com.example.corsa.ui.screens.home.HomeScreen
 import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.home.StopWatchScreen
-import com.example.corsa.ui.screens.logintester.LoginScreen
 import com.example.corsa.ui.screens.profile.ProfileScreen
 import com.example.corsa.ui.screens.profiledetail.ProfileDetailScreen
 import com.example.corsa.ui.screens.profiledetail.ProfileDetailViewModel
 import com.example.corsa.ui.screens.rundetail.RunDetailScreen
 import com.example.corsa.ui.screens.rundetail.RunDetailViewModel
+import com.example.corsa.ui.screens.splash.SplashScreen
 import com.example.corsa.ui.screens.stats.StatsScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 sealed interface CorsaRoute {
-    @Serializable data object LoginTester : CorsaRoute
     @Serializable data object Home : CorsaRoute
     @Serializable data object AddFriendsScreen : CorsaRoute
     @Serializable data object StopWatchScreen : CorsaRoute
@@ -46,53 +45,61 @@ sealed interface CorsaRoute {
 
 @Composable
 fun CorsaNavGraph(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = CorsaRoute.Home
-    ) {
-        composable<CorsaRoute.LoginTester> {
-            LoginScreen(navController = navController) { }
-        }
-        composable<CorsaRoute.Home> {
-            val homeViewModel = koinViewModel<HomeViewModel>()
-            val state = homeViewModel.state
-            HomeScreen(state, navController)
-        }
-        composable<CorsaRoute.StopWatchScreen> {
-            val homeViewModel = koinViewModel<HomeViewModel>()
-            val timerState by homeViewModel.timerState.collectAsStateWithLifecycle()
-            StopWatchScreen(timerState, navController, homeViewModel.stopWatchActions)
-        }
-        composable<CorsaRoute.StatsScreen> {
-            StatsScreen(navController = navController)
-        }
-        composable<CorsaRoute.FriendsScreen> {
-            val friendsVM = koinViewModel<FriendsViewModel>()
-            FriendsScreen(navController, friendsVM)
-        }
-        composable<CorsaRoute.AddFriendsScreen> {
-            val friendsVM = koinViewModel<FriendsViewModel>()
-            AddFriendsScreen(navController, friendsVM)
-        }
-        composable<CorsaRoute.AuthScreen> {
-            AuthScreen(navController = navController)
-        }
-        composable<CorsaRoute.LoginScreen> {
-            LoginScreen(navController = navController)
-        }
-        composable<CorsaRoute.RegisterScreen> {
-            RegisterScreen(navController = navController)
-        }
-        composable<CorsaRoute.ProfileScreen> {
-            ProfileScreen(navController = navController)
-        }
-        composable<CorsaRoute.RunDetailScreen> {
-            val viewModel = koinViewModel<RunDetailViewModel>()
-            RunDetailScreen(navController = navController, viewModel = viewModel)
-        }
-        composable<CorsaRoute.ProfileDetailScreen> {
-            val viewModel = koinViewModel<ProfileDetailViewModel>()
-            ProfileDetailScreen(navController = navController, viewModel = viewModel)
+    val viewModel: AuthStateViewModel = koinViewModel()
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+    when (startDestination) {
+        StartDestination.Loading -> SplashScreen()
+        else -> {
+            NavHost(
+                navController = navController,
+                startDestination = when (startDestination) {
+                    StartDestination.Home -> CorsaRoute.Home
+                    else -> CorsaRoute.AuthScreen
+                }
+            ) {
+                composable<CorsaRoute.AuthScreen> {
+                    AuthScreen(navController = navController)
+                }
+                composable<CorsaRoute.LoginScreen> {
+                    LoginScreen(navController = navController)
+                }
+                composable<CorsaRoute.RegisterScreen> {
+                    RegisterScreen(navController = navController)
+                }
+                composable<CorsaRoute.Home> {
+                    val homeViewModel = koinViewModel<HomeViewModel>()
+                    val state = homeViewModel.state
+                    HomeScreen(state, navController)
+                }
+                composable<CorsaRoute.StopWatchScreen> {
+                    val homeViewModel = koinViewModel<HomeViewModel>()
+                    val timerState by homeViewModel.timerState.collectAsStateWithLifecycle()
+                    StopWatchScreen(timerState, navController, homeViewModel.stopWatchActions)
+                }
+                composable<CorsaRoute.StatsScreen> {
+                    StatsScreen(navController = navController)
+                }
+                composable<CorsaRoute.FriendsScreen> {
+                    val friendsVM = koinViewModel<FriendsViewModel>()
+                    FriendsScreen(navController = navController, friendsVM)
+                }
+                composable<CorsaRoute.ProfileScreen> {
+                    ProfileScreen(navController = navController)
+                }
+                composable<CorsaRoute.RunDetailScreen> {
+                    val viewModel = koinViewModel<RunDetailViewModel>()
+                    RunDetailScreen(navController = navController, viewModel = viewModel)
+                }
+                composable<CorsaRoute.ProfileDetailScreen> {
+                    val viewModel = koinViewModel<ProfileDetailViewModel>()
+                    ProfileDetailScreen(navController = navController, viewModel = viewModel)
+                }
+                composable<CorsaRoute.AddFriendsScreen> {
+                    val friendsVM = koinViewModel<FriendsViewModel>()
+                    AddFriendsScreen(navController, friendsVM)
+                }
+            }
         }
     }
 }

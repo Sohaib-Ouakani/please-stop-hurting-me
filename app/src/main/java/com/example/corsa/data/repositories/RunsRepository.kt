@@ -16,12 +16,28 @@ class FakeRunsRepository : RunsRepository {
 
     // Realistic GeoJSON path around a park loop
     private val fakePath = """
-        {"type":"LineString","coordinates":[
-            [9.1200,45.4654],[9.1215,45.4662],[9.1230,45.4670],
-            [9.1248,45.4675],[9.1260,45.4668],[9.1255,45.4655],
-            [9.1240,45.4648],[9.1222,45.4645],[9.1200,45.4654]
-        ]}
-    """.trimIndent()
+    {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [12.003215, 44.2160733],
+              [9.1875, 45.4670],
+              [9.1901, 45.4682],
+              [9.1923, 45.4665],
+              [9.1910, 45.4648],
+              [9.1880, 45.4638],
+              [9.1859, 45.4654]
+            ]
+          }
+        }
+      ]
+    }
+""".trimIndent()
 
     private val fakeRuns = listOf(
         Run(
