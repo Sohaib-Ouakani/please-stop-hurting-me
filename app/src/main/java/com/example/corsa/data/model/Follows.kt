@@ -2,6 +2,7 @@ package com.example.corsa.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -10,6 +11,17 @@ data class Follows @OptIn(ExperimentalUuidApi::class) constructor(
     val id: String,
     @SerialName("follower_id")
     val followerId: String,
+    @SerialName("following_id")
+    val followingId: String,
+    @SerialName("created_at")
+    val createdAt:Instant,
+)
+
+@Serializable
+data class FollowInsert(
+    @SerialName("follower_id")
+    val followerId: String,
+
     @SerialName("following_id")
     val followingId: String,
 )

@@ -19,3 +19,13 @@ data class Comments @OptIn(ExperimentalUuidApi::class) constructor(
     @SerialName("updated_at")
     val updatedAt: Instant,
 )
+@Serializable
+data class CommentInsert(
+    @SerialName("run_id")
+    val runId: String,
+
+    @SerialName("author_id")
+    val authorId: String,
+
+    val content: String,
+)

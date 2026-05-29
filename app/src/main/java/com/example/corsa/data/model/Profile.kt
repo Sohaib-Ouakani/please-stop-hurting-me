@@ -9,7 +9,7 @@ data class Profile(
     val id: String,
     @SerialName("auth_user_id")
     val authUserId: String,
-    val username: String? = null,
+    val username: String,
     @SerialName("avatar_path")
     val avatarPath: String? = null,
     val level: Int = 1,
