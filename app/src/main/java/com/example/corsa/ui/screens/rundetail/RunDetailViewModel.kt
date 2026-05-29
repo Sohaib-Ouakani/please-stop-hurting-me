@@ -5,10 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.corsa.data.model.Run
 import com.example.corsa.data.repositories.RunsRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
@@ -42,23 +43,22 @@ class RunDetailViewModel(
 
     private val _isMapExpanded = MutableStateFlow(false)
 
-    val state = combine(
-        flowOf(runId),
-        _isMapExpanded
-    ) { id, expanded ->
-        var result: RunDetailUiState = RunDetailUiState.Loading
-        repository.getRunById(id).collect { run ->
-            result = if (run != null)
-                RunDetailUiState.Success(run = run, isMapExpanded = expanded)
-            else
-                RunDetailUiState.Error("Run not found.")
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val state = _isMapExpanded
+        .flatMapLatest { expanded ->
+            repository.getRunById(runId)
+                .map { run ->
+                    if (run != null)
+                        RunDetailUiState.Success(run = run, isMapExpanded = expanded)
+                    else
+                        RunDetailUiState.Error("Run not found.")
+                }
         }
-        result
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = RunDetailUiState.Loading
-    )
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = RunDetailUiState.Loading
+        )
 
     val actions = RunDetailActions(
         setMapExpanded = { expanded -> _isMapExpanded.update { expanded } },

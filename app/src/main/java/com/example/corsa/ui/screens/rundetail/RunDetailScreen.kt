@@ -1,5 +1,7 @@
 package com.example.corsa.ui.screens.rundetail
 
+import android.graphics.Color
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +26,32 @@ import com.example.corsa.utils.formatDistance
 import com.example.corsa.utils.formatDuration
 import com.example.corsa.utils.formatPace
 import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.LineString
+import androidx.core.graphics.toColorInt
+import com.example.corsa.utils.latLngs
+import com.example.corsa.utils.parseRunGeoJson
+import org.maplibre.geojson.Polygon
+
+
+private const val ROUTE_SOURCE_ID = "run-route-source"
+private const val ROUTE_LAYER_ID  = "run-route-layer"
+private const val MAP_STYLE_URL   = "https://tiles.openfreemap.org/styles/liberty"
 
 // ── Fake comment model (replace with real data class later) ───────────────
 data class Comment(
@@ -78,62 +106,120 @@ fun RunDetailScreen(
 
 // ── Map ───────────────────────────────────────────────────────────────────
 
+//@Composable
+//fun RunDetailMap(
+//    geoJson: String,
+//    modifier: Modifier = Modifier
+//) {
+//    // TODO: replace Box with MapLibre MapboxMap composable and draw
+//    //       the route using geoJsonToLineString(geoJson) as a LineLayer.
+//
+//    Box(
+//        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Text(
+//            text = "Map placeholder",
+//            style = MaterialTheme.typography.bodyMedium,
+//            color = MaterialTheme.colorScheme.onSurfaceVariant
+//        )
+//    }
+//}
+
+// ── Map ───────────────────────────────────────────────────────────────────
+private const val ROUTE_COLOR     = "#FF4500"   // vivid orange-red — easy to spot on any basemap
+private const val ROUTE_WIDTH     = 5f
+
 @Composable
 fun RunDetailMap(
     geoJson: String,
     modifier: Modifier = Modifier
 ) {
-    // TODO: replace Box with MapLibre MapboxMap composable and draw
-    //       the route using geoJsonToLineString(geoJson) as a LineLayer.
-    //       Example:
-    //
-    //  val lineString = geoJsonToLineString(geoJson)
-    //  MapboxMap(
-    //      modifier = modifier,
-    //      mapViewportState = rememberMapViewportState {
-    //          setCameraOptions {
-    //              center(lineString.coordinates().first())
-    //              zoom(13.0)
-    //          }
-    //      }
-    //  ) {
-    //      MapEffect(lineString) { map ->
-    //          map.getStyle { style ->
-    //              style.addSource(GeoJsonSource("run-source", lineString))
-    //              style.addLayer(LineLayer("run-layer", "run-source").apply {
-    //                  setProperties(
-    //                      PropertyFactory.lineColor(android.graphics.Color.parseColor("#FF6600")),
-    //                      PropertyFactory.lineWidth(4f),
-    //                      PropertyFactory.lineCap(LINE_CAP_ROUND),
-    //                      PropertyFactory.lineJoin(LINE_JOIN_ROUND)
-    //                  )
-    //              })
-    //          }
-    //      }
-    //  }
+    val context        = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Map placeholder",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    MapLibre.getInstance(context)
+
+    // Hoist MapView so lifecycle observer and AndroidView share the same instance
+    val mapView = remember { MapView(context) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner)  { mapView.onStart() }
+            override fun onResume(owner: LifecycleOwner) { mapView.onResume() }
+            override fun onPause(owner: LifecycleOwner)  { mapView.onPause() }
+            override fun onStop(owner: LifecycleOwner)   { mapView.onStop() }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onDestroy()
+        }
     }
 
-    // Simplest possible MapLibre map — no token needed, uses a free OSM style
-//    MapLibre(
-//        modifier = modifier,
-//        mapViewportState = rememberMapViewportState {
-//            setCameraOptions {
-//                center(Point.fromLngLat(9.1200, 45.4654)) // fake coords from FakeRunsRepository
-//                zoom(13.0)
-//            }
-//        },
-//        styleUri = "https://demotiles.maplibre.org/style.json" // free MapLibre demo tiles
-//    )
+    AndroidView(
+        // ── factory: runs ONCE — set up style, source, layer, camera here ──
+        factory = { _ ->
+            mapView.also { mv ->
+                mv.getMapAsync { map ->
+                    map.setStyle(MAP_STYLE_URL) { style ->
+                        val fc = parseRunGeoJson(geoJson)
+                        val latLngs = fc.latLngs()
+
+                        Log.d("RunDetailMap", "Feature count: ${fc.features()?.size}")
+                        Log.d("RunDetailMap", "LatLng count: ${latLngs.size}")
+
+                        // 1. Source
+                        style.addSource(GeoJsonSource(ROUTE_SOURCE_ID, fc))
+
+                        // 2. Layer (source must already be added above)
+                        style.addLayer(
+                            LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID)
+                                .withProperties(
+                                    PropertyFactory.lineColor(ROUTE_COLOR.toColorInt()),
+                                    PropertyFactory.lineWidth(ROUTE_WIDTH),
+                                    PropertyFactory.lineCap("round"),
+                                    PropertyFactory.lineJoin("round")
+                                )
+                        )
+
+                        // 3. Camera
+
+                        when {
+                            latLngs.size >= 2 -> {
+                                val bounds = LatLngBounds.Builder()
+                                    .includes(latLngs)
+                                    .build()
+                                val paddingPx = (80 * context.resources.displayMetrics.density).toInt()
+                                map.easeCamera(
+                                    CameraUpdateFactory.newLatLngBounds(
+                                        bounds,
+                                        paddingPx, paddingPx, paddingPx, paddingPx
+                                    ),
+                                    600
+                                )
+                            }
+                            latLngs.size == 1 -> {
+                                map.easeCamera(
+                                    CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14.0),
+                                    600
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        modifier = modifier,
+        // ── update: runs on recomposition — only refresh source data ──────
+        update = { mv ->
+            mv.getMapAsync { map ->
+                val style = map.style ?: return@getMapAsync
+                (style.getSource(ROUTE_SOURCE_ID) as? GeoJsonSource)
+                    ?.setGeoJson(parseRunGeoJson(geoJson))
+            }
+        }
+    )
 }
 
 // ── Bottom sheet content ──────────────────────────────────────────────────
