@@ -6,7 +6,7 @@ import com.example.corsa.data.repositories.RunsRepositoryImpl
 import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.ProfilesRepositoryImpl
 import com.example.corsa.data.repositories.RunsRepository
-import com.example.corsa.ui.screens.friends.FriendsViewModel
+import com.example.corsa.ui.screens.friends.FollowingViewModel
 import com.example.corsa.ui.screens.SessionViewModel
 import com.example.corsa.ui.screens.auth.AuthViewModel
 import com.example.corsa.ui.screens.home.HomeViewModel
@@ -45,7 +45,7 @@ val appModule = module {
     viewModel { StatsScreenViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { HomeViewModel() }
-    viewModel { FriendsViewModel(get(), get() ) }
+    viewModel { FollowingViewModel(get(), get() ) }
     viewModel { params -> RunDetailViewModel(get(), params.get()) }
     viewModel { ProfileDetailViewModel(get(), get(), get()) }
 }

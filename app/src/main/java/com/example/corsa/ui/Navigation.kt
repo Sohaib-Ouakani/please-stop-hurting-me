@@ -8,13 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.corsa.ui.screens.SessionViewModel
 import com.example.corsa.ui.screens.StartDestination
-import com.example.corsa.ui.screens.friends.FriendsScreen
+import com.example.corsa.ui.screens.friends.FollowScreen
 import com.example.corsa.ui.screens.auth.AuthScreen
 import com.example.corsa.ui.screens.auth.AuthViewModel
 import com.example.corsa.ui.screens.auth.LoginScreen
 import com.example.corsa.ui.screens.auth.RegisterScreen
-import com.example.corsa.ui.screens.friends.AddFriendsScreen
-import com.example.corsa.ui.screens.friends.FriendsViewModel
+import com.example.corsa.ui.screens.friends.AddFollowScreen
+import com.example.corsa.ui.screens.friends.FollowingViewModel
 import com.example.corsa.ui.screens.home.HomeScreen
 import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.home.StopWatchScreen
@@ -32,11 +32,11 @@ import org.koin.androidx.compose.koinViewModel
 
 sealed interface CorsaRoute {
     @Serializable data object Home : CorsaRoute
-    @Serializable data object AddFriendsScreen : CorsaRoute
+    @Serializable data object AddFollowScreen : CorsaRoute
     @Serializable data object StopWatchScreen : CorsaRoute
     @Serializable data object StatsScreen : CorsaRoute
 
-    @Serializable data object FriendsScreen : CorsaRoute
+    @Serializable data object FollowScreen : CorsaRoute
     @Serializable data object AuthScreen : CorsaRoute
     @Serializable data object LoginScreen : CorsaRoute
     @Serializable data object RegisterScreen : CorsaRoute
@@ -98,9 +98,9 @@ fun CorsaNavGraph(navController: NavHostController) {
                     val runs by statsViewModel.runs.collectAsStateWithLifecycle()
                     userEntry?.let { StatsScreen(navController, it, runs) }
                 }
-                composable<CorsaRoute.FriendsScreen> {
-                    val friendsVM = koinViewModel<FriendsViewModel>()
-                    FriendsScreen(navController = navController, friendsVM)
+                composable<CorsaRoute.FollowScreen> {
+                    val friendsVM = koinViewModel<FollowingViewModel>()
+                    FollowScreen(navController = navController, friendsVM)
                 }
                 composable<CorsaRoute.SettingsScreen> {
                     val settingsViewModel = koinViewModel<SettingsViewModel>()
@@ -125,9 +125,9 @@ fun CorsaNavGraph(navController: NavHostController) {
                     val viewModel = koinViewModel<ProfileDetailViewModel>()
                     ProfileDetailScreen(navController = navController, viewModel = viewModel)
                 }
-                composable<CorsaRoute.AddFriendsScreen> {
-                    val friendsVM = koinViewModel<FriendsViewModel>()
-                    AddFriendsScreen(navController, friendsVM)
+                composable<CorsaRoute.AddFollowScreen> {
+                    val friendsVM = koinViewModel<FollowingViewModel>()
+                    AddFollowScreen(navController, friendsVM)
                 }
             }
         }

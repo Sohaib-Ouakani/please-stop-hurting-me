@@ -28,8 +28,8 @@ fun BottomBar(navController: NavController) {
     BottomAppBar() {
         // FRIENDS
         NavigationBarItem(
-            selected = currentRoute?.hasRoute<CorsaRoute.FriendsScreen>() == true,
-            onClick = { navController.navigate(CorsaRoute.FriendsScreen) },
+            selected = currentRoute?.hasRoute<CorsaRoute.FollowScreen>() == true,
+            onClick = { navController.navigate(CorsaRoute.FollowScreen) },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Groups,
@@ -39,7 +39,7 @@ fun BottomBar(navController: NavController) {
             },
             label = {
                 Text(
-                    "FRIENDS",
+                    "FOLLOW",
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp,
                 )

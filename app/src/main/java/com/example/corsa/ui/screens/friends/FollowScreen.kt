@@ -73,9 +73,9 @@ enum class StatsTab(val label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsScreen(
+fun FollowScreen(
     navController: NavController,
-    viewModel: FriendsViewModel
+    viewModel: FollowingViewModel
 ) {
     var selectedTab by remember { mutableStateOf(StatsTab.Rank) }
     val tabs = StatsTab.entries
@@ -85,7 +85,7 @@ fun FriendsScreen(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) },
         floatingActionButton = { FloatingActionButton(
-            onClick = { navController.navigate(CorsaRoute.AddFriendsScreen) },
+            onClick = { navController.navigate(CorsaRoute.AddFollowScreen) },
             modifier = Modifier.size(56.dp)
         ) {
             Icon(Icons.Default.PersonAdd, "Add Friends")
@@ -131,7 +131,7 @@ fun FriendsScreen(
 // ── Feed part  ────────────────────────────────────────────────
 
 @Composable
-fun Feed(viewModel: FriendsViewModel) {
+fun Feed(viewModel: FollowingViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadFeed()
     }
@@ -249,7 +249,7 @@ fun FeedCard(entry: RunFeedEntry) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendSearchBar(viewModel: FriendsViewModel, navController: NavController) {
+fun FriendSearchBar(viewModel: FollowingViewModel, navController: NavController) {
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
     val allFriends = viewModel.searchStatus.friendsName
@@ -370,7 +370,7 @@ enum class RankTab(val label: String) {
 }
 
 @Composable
-fun Rank(viewModel: FriendsViewModel) {
+fun Rank(viewModel: FollowingViewModel) {
     var rankSelectedTab by remember { mutableStateOf(RankTab.Kilometers) }
     val tabs = RankTab.entries
 

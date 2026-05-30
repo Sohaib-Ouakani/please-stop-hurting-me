@@ -1,10 +1,7 @@
 package com.example.corsa.ui.screens.friends
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,14 +24,13 @@ import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
 import com.example.corsa.ui.composables.BackTopBar
 import com.example.corsa.ui.composables.BottomBar
-import com.example.corsa.ui.composables.TopBar
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddFriendsScreen(
+fun AddFollowScreen(
     navController: NavController,
-    viewModel: FriendsViewModel
+    viewModel: FollowingViewModel
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -91,7 +87,7 @@ fun AddFriendsScreen(
 // ── Search bar component ──────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(viewModel: FriendsViewModel, navController: NavController) {
+fun SearchBar(viewModel: FollowingViewModel, navController: NavController) {
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
     val suggested = viewModel.searchStatus.notFriends

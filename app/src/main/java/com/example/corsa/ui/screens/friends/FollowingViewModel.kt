@@ -39,7 +39,7 @@ data class SearchStatus(
 
 enum class SortBy { Kilometers, Level }
 
-class FriendsViewModel(
+class FollowingViewModel(
     private val profilesRepository: ProfilesRepository,
     private val runsRepository: RunsRepository,
 ) : ViewModel() {
@@ -70,8 +70,8 @@ class FriendsViewModel(
 
     private suspend fun loadFriendsProfiles() {
         try {
-            val friends = profilesRepository.getFriendsProfile()
-            val notFriends = profilesRepository.getNotFriendsProfile()
+            val friends = profilesRepository.getProfileIFollow()
+            val notFriends = profilesRepository.getProfilesIDoNotFollow()
             cachedFriendProfiles = friends
             _searchStatus.value = SearchStatus(
                 friendsName = friends,
@@ -94,7 +94,7 @@ class FriendsViewModel(
                         userId      = profile.id,
                         displayName = profile.username,
                         avatarUrl   = profile.avatarPath,
-                        weekKm      = profilesRepository.weeklyKmById(profile.id),
+                        weekKm      = profilesRepository.weeklyKmByUserId(profile.id),
                         level       = profile.level,
                     )
                 }

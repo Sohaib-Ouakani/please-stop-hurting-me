@@ -9,8 +9,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import kotlinx.coroutines.async
+import io.github.jan.supabase.postgrest.query.Columns.Companion.raw
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -27,9 +26,9 @@ interface ProfilesRepository {
     suspend fun getMyProfile(): Profile
     suspend fun updateProfile(update: ProfileUpdate): Profile
     suspend fun getMyUserEntry(): UserEntry
-    suspend fun getFriendsProfile(): List<Profile>
-    suspend fun weeklyKmById(userId: String): Float
-    suspend fun getNotFriendsProfile(): List<Profile>
+    suspend fun getProfileIFollow(): List<Profile>
+    suspend fun weeklyKmByUserId(userId: String): Float
+    suspend fun getProfilesIDoNotFollow(): List<Profile>
 }
 
 // ── Fake implementation ────────────────────────────────────────────────────
@@ -47,7 +46,7 @@ class ProfilesRepositoryImpl(
                 .decodeSingle<Profile>()
     }
 
-    override suspend fun weeklyKmById(userId: String): Float {
+    override suspend fun weeklyKmByUserId(userId: String): Float {
         val now = Clock.System.now()
         val zone = TimeZone.currentSystemDefault()
         val today = now.toLocalDateTime(zone).date
@@ -69,24 +68,24 @@ class ProfilesRepositoryImpl(
         return runs.sumOf { it.distanceMeters.toDouble() }.toFloat() / 1000f
     }
 
-    override suspend fun getNotFriendsProfile(): List<Profile> {
-        val currentUserId = getMyProfile()
+    override suspend fun getProfilesIDoNotFollow(): List<Profile> {
+        val currentProfileId = getMyProfile().id
 
         val follows = supabase.postgrest["follows"]
             .select {
                 filter {
-                    eq("follower_id", currentUserId)
+                    eq("follower_id", currentProfileId)
                 }
             }
             .decodeList<Follow>()
 
-        val followingIds = (follows.map { it.followingId } + currentUserId)
-            .joinToString(",") { "\"$it\"" }
+        val excludedIds = (follows.map { it.followingId } + currentProfileId)
+            .joinToString(",")
 
         return supabase.postgrest["profiles"]
             .select {
                 filter {
-                    filterNot("auth_user_id", FilterOperator.IN, "($followingIds)")
+                    raw("id=not.in.($excludedIds)")
                 }
             }
             .decodeList<Profile>()
@@ -96,12 +95,12 @@ class ProfilesRepositoryImpl(
         val profile = supabase.postgrest["profiles"]
             .select {
                 filter {
-                    eq("auth_user_id", userId)
+                    eq("id", userId)
                 }
             }
             .decodeSingle<Profile>()
 
-        val weeklyKm = weeklyKmById(profile.id)
+        val weeklyKm = weeklyKmByUserId(profile.id)
 
         return UserEntry(
             profile.username,
@@ -146,19 +145,22 @@ class ProfilesRepositoryImpl(
             .decodeSingle<Profile>()
     }
 
-    private fun getMyAuthUserId(): String {
-        return supabase.auth.currentUserOrNull()?.id ?: error("User not authenticated")
-    }
-
     override suspend fun getMyUserEntry(): UserEntry {
-        val myId = supabase.auth.currentUserOrNull()?.id
-            ?: error("User not authenticated")
+        val profile = getMyProfile()
+        val weeklyKm = weeklyKmByUserId(profile.id)
 
-        return getUserEntryByUserId(myId)
+        return UserEntry(
+            profile.username,
+            profile.avatarPath,
+            weeklyKm,
+            profile.level,
+            profile.completedChallenges,
+            profile.totalKm,
+        )
     }
 
-    override suspend fun getFriendsProfile(): List<Profile> {
-        val currentUserId = getMyProfile()
+    override suspend fun getProfileIFollow(): List<Profile> {
+        val currentUserId = getMyProfile().id
 
         val follows = supabase.postgrest["follows"]
             .select {
@@ -180,5 +182,9 @@ class ProfilesRepositoryImpl(
             }
             .decodeList<Profile>()
 
+    }
+
+    private fun getMyAuthUserId(): String {
+        return supabase.auth.currentUserOrNull()?.id ?: error("User not authenticated")
     }
 }
