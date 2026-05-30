@@ -89,25 +89,30 @@ class HomeViewModel(
             )
         }
     }
-    data class DebugLocation(
-        val lat: Double, val lng: Double, val accuracy: Float
-    )
+    // ── Run tracking state ───────────────────────────────────────────────────────
 
-    private val _liveLocation = MutableStateFlow<DebugLocation?>(null)
-    val liveLocation: StateFlow<DebugLocation?> = _liveLocation
+    data class TrackingPoint(val lat: Double, val lng: Double)
 
-    fun startLocationUpdates() {
-        viewModelScope.launch {
-            locationProvider.locationFlow(intervalMs = 5_000L)   // 5 s for testing
-                .collect { location ->
-                    _liveLocation.value = DebugLocation(
-                        lat      = location.latitude,
-                        lng      = location.longitude,
-                        accuracy = location.accuracy
-                    )
-                }
+    data class RunState(
+        val points: List<TrackingPoint> = emptyList(),
+        val distanceMeters: Float = 0f,
+        val currentPaceSecPerKm: Int = 0,   // seconds per km, 0 = not yet computable
+    ) {
+        val distanceKm: Float get() = distanceMeters / 1000f
+
+        // e.g. "5:30 /km" — shown on the StopWatch screen
+        val formattedPace: String get() {
+            if (currentPaceSecPerKm <= 0) return "--:-- /km"
+            val m = currentPaceSecPerKm / 60
+            val s = currentPaceSecPerKm % 60
+            return String.format(Locale.US, "%d:%02d /km", m, s)
         }
     }
+
+    private val _runState = MutableStateFlow(RunState())
+    val runState: StateFlow<RunState> = _runState
+
+    private var trackingJob: Job? = null
 
     private val _timerState = MutableStateFlow(StopWatchStatus())
     val timerState: StateFlow<StopWatchStatus> = _timerState
@@ -127,10 +132,48 @@ class HomeViewModel(
                 }
             }
         }
+
+        // GPS accumulation — starts fresh, or resumes from where we paused
+        trackingJob = viewModelScope.launch {
+            locationProvider.locationFlow(intervalMs = 3000L)
+                .collect { location ->
+                    val newPoint = TrackingPoint(location.latitude, location.longitude)
+                    _runState.update { current ->
+                        val updatedPoints = current.points + newPoint
+
+                        // Distance: add the leg from the previous point to this one
+                        val addedMeters = if (updatedPoints.size >= 2) {
+                            val prev = updatedPoints[updatedPoints.size - 2]
+                            val results = FloatArray(1)
+                            android.location.Location.distanceBetween(
+                                prev.lat, prev.lng,
+                                newPoint.lat, newPoint.lng,
+                                results
+                            )
+                            results[0]
+                        } else 0f
+
+                        val totalDistance = current.distanceMeters + addedMeters
+
+                        // Pace: based on total elapsed time and total distance so far
+                        val elapsedSeconds = _timerState.value.elapsedTime / 1000f
+                        val pace = if (totalDistance > 0)
+                            (elapsedSeconds / (totalDistance / 1000f)).toInt()
+                        else 0
+
+                        current.copy(
+                            points        = updatedPoints,
+                            distanceMeters = totalDistance,
+                            currentPaceSecPerKm = pace
+                        )
+                    }
+                }
+        }
     }
 
     private fun pause() {
         timerJob?.cancel()
+        trackingJob?.cancel()       // stop collecting GPS — points are preserved
         _timerState.update { it.copy(isRunning = false) }
     }
 
@@ -141,6 +184,7 @@ class HomeViewModel(
                 elapsedTime = 0L
             )
         }
+        _runState.value = RunState()    // wipe accumulated points
     }
 
     override fun onCleared() {

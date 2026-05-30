@@ -90,7 +90,12 @@ fun CorsaNavGraph(navController: NavHostController) {
                 composable<CorsaRoute.StopWatchScreen> {
                     val homeViewModel = koinViewModel<HomeViewModel>()
                     val timerState by homeViewModel.timerState.collectAsStateWithLifecycle()
-                    StopWatchScreen(timerState, navController, homeViewModel.stopWatchActions)
+                    StopWatchScreen(
+                        timerState,
+                        navController,
+                        homeViewModel.stopWatchActions,
+                        homeViewModel
+                    )
                 }
                 composable<CorsaRoute.StatsScreen> {
                     val statsViewModel = koinViewModel<StatsScreenViewModel>()

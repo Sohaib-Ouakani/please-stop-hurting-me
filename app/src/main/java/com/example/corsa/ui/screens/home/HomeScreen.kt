@@ -130,32 +130,6 @@ private fun Content(
                 state.currentKm,
                 state.progress
             )
-            val location by remember {
-                derivedStateOf { viewModel.liveLocation }
-            }.value.collectAsStateWithLifecycle()
-
-            // Kick off updates as soon as the screen is visible
-            LaunchedEffect(Unit) {
-                viewModel.startLocationUpdates()
-            }
-
-            // Temporary debug card — we'll remove this in Step 3
-            location?.let { loc ->
-                Spacer(Modifier.height(Spacing.md))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.md)
-                ) {
-                    Column(Modifier.padding(Spacing.lg)) {
-                        Text("📍 GPS fix received", style = MaterialTheme.typography.labelSmall)
-                        Spacer(Modifier.height(Spacing.sm))
-                        Text("Lat:  ${loc.lat}")
-                        Text("Lng:  ${loc.lng}")
-                        Text("Accuracy: ±${loc.accuracy.toInt()} m")
-                    }
-                }
-            }
             // TODO: we can add new cards to display other stats, like meteo
         }
     }
