@@ -3,6 +3,7 @@ package com.example.corsa.ui.screens.home
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.corsa.data.location.LocationProvider
 import com.example.corsa.data.model.Profile
 import com.example.corsa.data.model.Run
 import com.example.corsa.data.repositories.AuthRepository
@@ -54,7 +55,8 @@ data class StopWatchAction(
 
 class HomeViewModel(
     private val runsRepository: RunsRepository,
-    private val profilesRepository: ProfilesRepository
+    private val profilesRepository: ProfilesRepository,
+    private val locationProvider: LocationProvider
 ): ViewModel() {
     val stopWatchActions = StopWatchAction(
         { start() },
@@ -85,6 +87,25 @@ class HomeViewModel(
                 progress = weeklyKm / goalKm,
                 locationName = "Galeata"
             )
+        }
+    }
+    data class DebugLocation(
+        val lat: Double, val lng: Double, val accuracy: Float
+    )
+
+    private val _liveLocation = MutableStateFlow<DebugLocation?>(null)
+    val liveLocation: StateFlow<DebugLocation?> = _liveLocation
+
+    fun startLocationUpdates() {
+        viewModelScope.launch {
+            locationProvider.locationFlow(intervalMs = 5_000L)   // 5 s for testing
+                .collect { location ->
+                    _liveLocation.value = DebugLocation(
+                        lat      = location.latitude,
+                        lng      = location.longitude,
+                        accuracy = location.accuracy
+                    )
+                }
         }
     }
 

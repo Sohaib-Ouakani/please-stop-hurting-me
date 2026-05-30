@@ -1,5 +1,6 @@
 package com.example.corsa
 
+import com.example.corsa.data.location.LocationProvider
 import com.example.corsa.data.repositories.AuthRepository
 import com.example.corsa.data.repositories.AuthRepositoryImpl
 import com.example.corsa.data.repositories.RunsRepositoryImpl
@@ -39,12 +40,13 @@ val appModule = module {
     single<ProfilesRepository> { ProfilesRepositoryImpl(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<RunsRepository> { RunsRepositoryImpl(get()) }
+    single<LocationProvider> { LocationProvider(get()) }
 
     viewModel { SessionViewModel(get()) }
     viewModel { SettingsViewModel(get(), get()) }
     viewModel { StatsScreenViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
-    viewModel { HomeViewModel(get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { FollowingViewModel(get(), get() ) }
     viewModel { params -> RunDetailViewModel(get(), params.get()) }
     viewModel { ProfileDetailViewModel(get(), get(), get()) }

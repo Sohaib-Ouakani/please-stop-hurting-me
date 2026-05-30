@@ -13,12 +13,16 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
 import com.example.corsa.ui.composables.BottomBar
@@ -45,7 +49,8 @@ import com.example.corsa.ui.theme.Spacing
 @Composable
 fun HomeScreen(
     state: HomeState?,
-    navController: NavController
+    navController: NavController,
+    viewModel: HomeViewModel
 ) {
     val cs = MaterialTheme.colorScheme
 
@@ -58,7 +63,7 @@ fun HomeScreen(
         when (permissionState) {
 
             LocationPermissionState.GRANTED -> {
-                Content(cs, navController, state)
+                Content(cs, navController, state, viewModel)
             }
 
             LocationPermissionState.DENIED -> {
@@ -78,7 +83,8 @@ fun HomeScreen(
 private fun Content(
     cs: ColorScheme,
     navController: NavController,
-    state: HomeState
+    state: HomeState,
+    viewModel: HomeViewModel
 ) {
     Scaffold(
         topBar = { TopBar(navController) },
@@ -124,6 +130,32 @@ private fun Content(
                 state.currentKm,
                 state.progress
             )
+            val location by remember {
+                derivedStateOf { viewModel.liveLocation }
+            }.value.collectAsStateWithLifecycle()
+
+            // Kick off updates as soon as the screen is visible
+            LaunchedEffect(Unit) {
+                viewModel.startLocationUpdates()
+            }
+
+            // Temporary debug card — we'll remove this in Step 3
+            location?.let { loc ->
+                Spacer(Modifier.height(Spacing.md))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.md)
+                ) {
+                    Column(Modifier.padding(Spacing.lg)) {
+                        Text("📍 GPS fix received", style = MaterialTheme.typography.labelSmall)
+                        Spacer(Modifier.height(Spacing.sm))
+                        Text("Lat:  ${loc.lat}")
+                        Text("Lng:  ${loc.lng}")
+                        Text("Accuracy: ±${loc.accuracy.toInt()} m")
+                    }
+                }
+            }
             // TODO: we can add new cards to display other stats, like meteo
         }
     }
