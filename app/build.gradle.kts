@@ -131,4 +131,7 @@ dependencies {
 
     //For MapLibre
     implementation(libs.android.sdk)
+
+    //FusedLocation dependency
+    implementation(libs.play.services.location)
 }

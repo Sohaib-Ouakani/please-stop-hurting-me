@@ -13,18 +13,23 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
 import com.example.corsa.ui.composables.BottomBar
 import com.example.corsa.ui.composables.TopBar
+import com.example.corsa.ui.premissions.LocationPermissionHandler
+import com.example.corsa.ui.premissions.LocationPermissionState
+import com.example.corsa.ui.screens.splash.SplashScreen
 import com.example.corsa.ui.theme.Size
 import com.example.corsa.ui.theme.Spacing
 
@@ -43,11 +48,44 @@ import com.example.corsa.ui.theme.Spacing
  */
 @Composable
 fun HomeScreen(
-    state: HomeState,
-    navController: NavController
+    state: HomeState?,
+    navController: NavController,
+    viewModel: HomeViewModel
 ) {
     val cs = MaterialTheme.colorScheme
 
+    if (state == null) {
+        SplashScreen()
+        return
+    }
+
+    LocationPermissionHandler { permissionState, requestPermission ->
+        when (permissionState) {
+
+            LocationPermissionState.GRANTED -> {
+                Content(cs, navController, state, viewModel)
+            }
+
+            LocationPermissionState.DENIED -> {
+                // First time or "ask again" — show a rationale + button
+                PermissionRationaleScreen(onRequest = requestPermission)
+            }
+
+            LocationPermissionState.PERMANENTLY_DENIED -> {
+                // User blocked it — we can only send them to Settings
+                PermissionDeniedScreen()
+            }
+        }
+    }
+}
+
+@Composable
+private fun Content(
+    cs: ColorScheme,
+    navController: NavController,
+    state: HomeState,
+    viewModel: HomeViewModel
+) {
     Scaffold(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) }
@@ -159,9 +197,9 @@ private fun LocationLabel(cs: ColorScheme, locationName: String) {
 @Composable
 private fun GoalCard(
     cs: ColorScheme,
-    goalKm: Double,
-    currentKm: Double,
-    progress: Double
+    goalKm: Float,
+    currentKm: Float,
+    progress: Float
 ) {
     Card(
         modifier = Modifier
@@ -192,7 +230,7 @@ private fun GoalCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircularProgressIndicator(
-                    progress = { progress.toFloat() },
+                    progress = { progress },
 
                 )
                 Spacer(
@@ -204,6 +242,60 @@ private fun GoalCard(
                     style = MaterialTheme.typography.displaySmall
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun PermissionRationaleScreen(onRequest: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(cs.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "Korsa needs location access\nto track your runs.",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = cs.onBackground
+        )
+        Spacer(Modifier.height(Spacing.lg))
+        Button(onClick = onRequest) {
+            Text("Grant permission")
+        }
+    }
+}
+
+@Composable
+private fun PermissionDeniedScreen() {
+    val cs = MaterialTheme.colorScheme
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(cs.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Location permission was denied.\nEnable it in Settings to use Corsa.",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = cs.onBackground
+        )
+        Spacer(Modifier.height(Spacing.lg))
+        Button(onClick = {
+            // Opens the app's system settings page
+            val intent = android.content.Intent(
+                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                android.net.Uri.fromParts("package", context.packageName, null)
+            )
+            context.startActivity(intent)
+        }) {
+            Text("Open Settings")
         }
     }
 }
