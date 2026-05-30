@@ -60,9 +60,9 @@ fun ProfileDetailScreen(
                     ProfileStats(
                         navController = navController,
                         runentries    = state.runs,
-                        infoentries   = state.userInfo,
+                        infoentries   = state.userEntry,
                         header = { ProfileHeader(
-                            userInfo      = state.userInfo,
+                            userInfo      = state.userEntry,
                             isFollowing   = isFollowing,
                             onFollowClick = viewModel::toggleFollow
                         ) }

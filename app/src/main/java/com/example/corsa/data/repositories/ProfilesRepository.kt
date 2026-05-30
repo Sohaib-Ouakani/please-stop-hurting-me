@@ -1,14 +1,25 @@
 package com.example.corsa.data.repositories
 
 import com.example.corsa.data.model.Profile
+import com.example.corsa.data.model.Run
 import com.example.corsa.ui.composables.UserEntry
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.async
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.String
+import kotlin.time.Clock
 
 // ── Interface ──────────────────────────────────────────────────────────────
 interface ProfilesRepository {
     suspend fun getProfileByUserId(userId: String): Profile
+    suspend fun getUserEntryByUserId(userId: String): UserEntry
     suspend fun getAllProfiles(): List<Profile>
     suspend fun getMyProfile(): Profile
 }
@@ -17,27 +28,6 @@ interface ProfilesRepository {
 class ProfilesRepositoryImpl(
     private val supabase: SupabaseClient
 ) : ProfilesRepository {
-
-    private val fakeProfiles = listOf(
-        UserEntry(
-            userId             = "1",
-            displayName        = "J. Donahue",
-            avatarUrl          = null,
-            weekKm             = 69.0,
-            level              = 7,
-            completedChallenge = 8,
-            totKn              = 48.3
-        ),
-        UserEntry(
-            userId             = "user-abc",
-            displayName        = "M. Rossi",
-            avatarUrl          = null,
-            weekKm             = 22.4,
-            level              = 4,
-            completedChallenge = 3,
-            totKn              = 312.5
-        )
-    )
 
     override suspend fun getProfileByUserId(userId: String): Profile {
         return supabase.postgrest["profiles"]
@@ -48,6 +38,51 @@ class ProfilesRepositoryImpl(
                 }
                 .decodeSingle<Profile>()
 
+    }
+
+    private suspend fun weeklyKmById(userId: String): Float {
+        val now = Clock.System.now()
+        val zone = TimeZone.currentSystemDefault()
+        val today = now.toLocalDateTime(zone).date
+
+        // Get the start of the current week (Monday)
+        val startOfWeek = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+        val startInstant = startOfWeek.atStartOfDayIn(zone)
+
+        val runs = supabase
+            .from("runs")
+            .select {
+                filter {
+                    eq("user_id", userId)
+                    gte("start_time", startInstant.toString())
+                }
+            }
+            .decodeList<Run>()
+
+        return runs.sumOf { it.distanceMeters.toDouble() }.toFloat() / 1000f
+    }
+
+    override suspend fun getUserEntryByUserId(userId: String): UserEntry {
+        val profile = supabase.postgrest["profiles"]
+            .select {
+                filter {
+                    eq("id", userId)
+                }
+            }
+            .decodeSingle<Profile>()
+
+        val weeklyKm = weeklyKmById(userId)
+
+        val userEntry = UserEntry(
+            profile.username,
+            profile.avatarPath,
+            weeklyKm,
+            profile.level,
+            profile.completedChallenges,
+            profile.totalKm,
+        )
+
+        return userEntry
     }
 
     override suspend fun getAllProfiles(): List<Profile>  {
