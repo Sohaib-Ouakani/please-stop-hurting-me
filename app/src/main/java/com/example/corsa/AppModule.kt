@@ -41,7 +41,7 @@ val appModule = module {
     viewModel { SettingsViewModel(get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { HomeViewModel() }
-    viewModel { FriendsViewModel() }
+    viewModel { FriendsViewModel(get(), get() ) }
     viewModel { params -> RunDetailViewModel(get(), params.get()) }
     viewModel { ProfileDetailViewModel(get(), get(), get()) }
 }
