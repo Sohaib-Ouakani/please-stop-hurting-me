@@ -3,7 +3,7 @@ package com.example.corsa
 import com.example.corsa.data.repositories.FakeProfilesRepository
 import com.example.corsa.data.repositories.AuthRepository
 import com.example.corsa.data.repositories.AuthRepositoryImpl
-import com.example.corsa.data.repositories.FakeRunsRepository
+import com.example.corsa.data.repositories.RunsRepositoryImpl
 import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
 import com.example.corsa.ui.screens.friends.FriendsViewModel
@@ -35,7 +35,7 @@ val appModule = module {
 
     single<ProfilesRepository> { FakeProfilesRepository() } // TODO: make sure to change this
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<RunsRepository> { FakeRunsRepository() }
+    single<RunsRepository> { RunsRepositoryImpl(get()) }
 
     viewModel { SessionViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
