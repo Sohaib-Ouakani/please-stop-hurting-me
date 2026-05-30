@@ -33,12 +33,12 @@ val appModule = module {
         }
     }
 
-    single<ProfilesRepository> { ProfilesRepositoryImpl(get()) } // TODO: make sure to change this
+    single<ProfilesRepository> { ProfilesRepositoryImpl(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<RunsRepository> { RunsRepositoryImpl(get()) }
 
     viewModel { SessionViewModel(get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { HomeViewModel() }
     viewModel { FriendsViewModel() }

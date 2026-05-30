@@ -11,6 +11,10 @@ interface AuthRepository {
     suspend fun login(email: String, password: String)
     suspend fun register(email: String, password: String)
     suspend fun logout()
+    suspend fun getEmail(): String
+    suspend fun updateEmail(newEmail: String): String
+    suspend fun updatePassword(oldPassword: String, newPassword: String)
+    fun isEmailUser(): Boolean
     val sessionStatus: Flow<SessionStatus>
 }
 
@@ -44,5 +48,50 @@ class AuthRepositoryImpl(
     override suspend fun logout() {
         supabase.auth.signOut()
         cachedProfile = null
+    }
+
+    override suspend fun getEmail(): String {
+        return supabase.auth.currentUserOrNull()?.email
+            ?: throw IllegalStateException("No authenticated user")
+    }
+
+    override suspend fun updateEmail(newEmail: String): String {
+        requireEmailProvider()
+
+        supabase.auth.updateUser {
+            email = newEmail
+        }
+        return getEmail()
+    }
+
+    override suspend fun updatePassword(oldPassword: String, newPassword: String) {
+        requireEmailProvider()
+
+        val email = supabase.auth.currentUserOrNull()?.email
+            ?: error("User not authenticated")
+
+        supabase.auth.signInWith(Email) {
+            this.email = email
+            this.password = oldPassword
+        }
+
+        supabase.auth.updateUser {
+            password = newPassword
+        }
+    }
+
+    override fun isEmailUser(): Boolean {
+        val identities = supabase.auth.currentUserOrNull()?.identities
+            ?: return false
+
+        return identities.any { it.provider == "email" }
+    }
+
+    private fun requireEmailProvider() {
+        val identities = supabase.auth.currentUserOrNull()?.identities
+            ?: error("User not authenticated")
+
+        val isGoogleUser = identities.any { it.provider == "google" }
+        if (isGoogleUser) error("Google accounts cannot change email or password")
     }
 }

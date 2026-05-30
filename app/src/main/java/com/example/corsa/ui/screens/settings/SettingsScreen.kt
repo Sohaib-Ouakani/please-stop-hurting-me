@@ -23,41 +23,55 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
-    navController: NavController,
-    onLogOut: () -> Unit
-    ) {
-
-    // TODO: load from supabase.auth.currentUserOrNull()
-    val currentUsername = "mario_rossi"
-    val currentEmail    = "mario@example.com"
-
+    navController:     NavController,
+    settingsInfo:      SettingsInfo?,
+    state:             SettingsState,
+    onLogOut:          () -> Unit,
+    onSaveNewUsername: (String) -> Unit,
+    onSaveNewEmail:    (String) -> Unit,
+    onSaveNewPassword: (oldPassword: String, newPassword: String) -> Unit,
+    onClearError:      () -> Unit,
+) {
     var newUsername by remember { mutableStateOf("") }
     var newEmail    by remember { mutableStateOf("") }
 
-    // TODO: val isEmailUser = supabase.auth.currentUserOrNull()
-    //     ?.identities?.any { it.provider == "email" } == true
-    val isEmailUser = true
-
-    var newPassword     by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var newPassword            by remember { mutableStateOf("") }
+    var confirmPassword        by remember { mutableStateOf("") }
     var newPasswordVisible     by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    var showReauthDialog    by remember { mutableStateOf(false) }
-    var currentPassword     by remember { mutableStateOf("") }
+    var showReauthDialog       by remember { mutableStateOf(false) }
+    var currentPassword        by remember { mutableStateOf("") }
     var currentPasswordVisible by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val scope             = rememberCoroutineScope()
 
-    fun showSnackbar(message: String) {
+    val showSnackbar: (String) -> Unit = { message ->
         scope.launch { snackbarHostState.showSnackbar(message) }
+    }
+
+    // Use error.id as key so the same message can retrigger
+    LaunchedEffect(state) {
+        if (state is SettingsState.Error) {
+            snackbarHostState.showSnackbar(state.message)
+            onClearError()
+        }
     }
 
     Scaffold(
         topBar = { ProfileTopBar(onBack = { navController.popBackStack() }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { contentPadding ->
+
+        // Show a full-screen loader while profile hasn't arrived yet
+        if (settingsInfo == null || state is SettingsState.Loading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,64 +82,54 @@ fun SettingsScreen(
         ) {
             Spacer(Modifier.height(Spacing.md))
 
-            // ── Username ──────────────────────────────────────────────────
             SectionLabel("ACCOUNT")
             Spacer(Modifier.height(Spacing.xs))
 
             EditableField(
-                currentValue = currentUsername,
-                newValue = newUsername,
+                currentValue = settingsInfo!!.currentUsername,
+                newValue     = newUsername,
                 onValueChange = { newUsername = it },
-                label = "Username",
+                label        = "Username",
                 keyboardType = KeyboardType.Text,
-                onSave = {
-                    // TODO: wrap in viewModelScope, call supabase, catch exception
-                    // On success:
-                    showSnackbar("Username aggiornato")
+                onSave       = {
+                    onSaveNewUsername(newUsername)
                     newUsername = ""
-                    // On failure e.g.:
-                    // showSnackbar("Errore: ${e.message}")
                 },
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 
             EditableField(
-                currentValue = currentEmail,
-                newValue = newEmail,
+                currentValue  = settingsInfo!!.currentEmail,
+                newValue      = newEmail,
                 onValueChange = { newEmail = it },
-                label = "Email",
-                keyboardType = KeyboardType.Email,
-                onSave = {
-                    // TODO: wrap in viewModelScope, call supabase, catch exception
-                    // On success:
-                    showSnackbar("Email aggiornata — controlla la tua casella per confermare")
+                label         = "Email",
+                keyboardType  = KeyboardType.Email,
+                onSave        = {
+                    onSaveNewEmail(newEmail)
                     newEmail = ""
-                    // On failure e.g.:
-                    // showSnackbar("Errore: ${e.message}")
                 },
             )
 
-            // ── Password (email users only) ───────────────────────────────
-            if (isEmailUser) {
+            if (settingsInfo!!.isEmailUser) {
                 Spacer(Modifier.height(Spacing.md))
                 SectionLabel("SICUREZZA")
                 Spacer(Modifier.height(Spacing.xs))
 
                 PasswordField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = "Nuova password",
-                    visible = newPasswordVisible,
-                    onToggleVisibility = { newPasswordVisible = !newPasswordVisible },
+                    value               = newPassword,
+                    onValueChange       = { newPassword = it },
+                    label               = "Nuova password",
+                    visible             = newPasswordVisible,
+                    onToggleVisibility  = { newPasswordVisible = !newPasswordVisible },
                 )
 
                 PasswordField(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    label = "Conferma password",
-                    visible = confirmPasswordVisible,
-                    onToggleVisibility = { confirmPasswordVisible = !confirmPasswordVisible },
+                    value               = confirmPassword,
+                    onValueChange       = { confirmPassword = it },
+                    label               = "Conferma password",
+                    visible             = confirmPasswordVisible,
+                    onToggleVisibility  = { confirmPasswordVisible = !confirmPasswordVisible },
                 )
 
                 Spacer(Modifier.height(Spacing.xs))
@@ -133,57 +137,43 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         when {
-                            newPassword.isBlank() -> showSnackbar("Inserisci una nuova password")
-                            newPassword.length < 8 -> showSnackbar("La password deve essere di almeno 8 caratteri")
-                            newPassword != confirmPassword -> showSnackbar("Le password non coincidono")
-                            else -> showReauthDialog = true // validation passed, now ask for current password
+                            newPassword.isBlank()            -> showSnackbar("Inserisci una nuova password")
+                            newPassword.length < 8           -> showSnackbar("La password deve essere di almeno 8 caratteri")
+                            newPassword != confirmPassword   -> showSnackbar("Le password non coincidono")
+                            else -> showReauthDialog = true
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Spacing.xxl),
-                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier.fillMaxWidth().height(Spacing.xxl),
+                    shape    = MaterialTheme.shapes.large,
                 ) {
                     Text("Cambia password")
                 }
 
                 Spacer(Modifier.height(Spacing.xs))
 
-                Button(
-                    onClick = onLogOut
-                ) {
+                Button(onClick = onLogOut) {
                     Text("Logout")
                 }
 
                 if (showReauthDialog) {
                     ReauthDialog(
-                        currentPassword = currentPassword,
+                        currentPassword        = currentPassword,
                         currentPasswordVisible = currentPasswordVisible,
-                        onPasswordChange = { currentPassword = it },
-                        onToggleVisibility = { currentPasswordVisible = !currentPasswordVisible },
+                        onPasswordChange       = { currentPassword = it },
+                        onToggleVisibility     = { currentPasswordVisible = !currentPasswordVisible },
                         onDismiss = {
-                            showReauthDialog = false
-                            currentPassword = ""
+                            showReauthDialog       = false
+                            currentPassword        = ""
                             currentPasswordVisible = false
                         },
                         onConfirm = {
                             showReauthDialog = false
-                            scope.launch {
-                                try {
-                                    // TODO: replace with actual reauth + update call
-                                    // supabase.auth.reauthenticate(password = currentPassword)
-                                    // supabase.auth.updateUser { password = newPassword }
-
-                                    // On success:
-                                    newPassword = ""
-                                    confirmPassword = ""
-                                    currentPassword = ""
-                                    currentPasswordVisible = false
-                                    showSnackbar("Password aggiornata")
-                                } catch (e: Exception) {
-                                    showSnackbar("Errore: ${e.message ?: "password attuale errata"}")
-                                }
-                            }
+                            onSaveNewPassword(currentPassword, newPassword)
+                            // Optimistically clear fields; errors surface via snackbar
+                            newPassword            = ""
+                            confirmPassword        = ""
+                            currentPassword        = ""
+                            currentPasswordVisible = false
                         },
                     )
                 }

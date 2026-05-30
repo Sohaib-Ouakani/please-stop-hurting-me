@@ -22,3 +22,15 @@ data class Profile(
     @SerialName("updated_at")
     val updatedAt: Instant? = null,
 )
+
+@Serializable
+data class ProfileUpdate(
+    val username: String? = null,
+    @SerialName("avatar_path")
+    val avatarPath: String? = null,
+    val level: Int? = null,
+    @SerialName("completed_challenges")
+    val completedChallenges: Int? = null,
+    @SerialName("total_km")
+    val totalKm: Float? = null,
+)
