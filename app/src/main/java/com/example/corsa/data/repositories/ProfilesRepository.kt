@@ -3,12 +3,14 @@ package com.example.corsa.data.repositories
 import com.example.corsa.data.model.Profile
 import com.example.corsa.ui.composables.UserRankEntry
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 
 // ── Interface ──────────────────────────────────────────────────────────────
 interface ProfilesRepository {
     suspend fun getProfileByUserId(userId: String): Profile
     suspend fun getAllProfiles(): List<Profile>
+    suspend fun getMyProfile(): Profile
 }
 
 // ── Fake implementation ────────────────────────────────────────────────────
@@ -52,5 +54,12 @@ class ProfilesRepositoryImpl(
         return supabase.postgrest["profiles"]
                 .select()
                 .decodeList<Profile>()
+    }
+
+    override suspend fun getMyProfile(): Profile {
+        val myId = supabase.auth.currentUserOrNull()?.id
+            ?: error("User not authenticated")
+
+        return getProfileByUserId(myId)
     }
 }
