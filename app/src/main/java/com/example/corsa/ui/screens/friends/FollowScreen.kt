@@ -252,7 +252,8 @@ fun FeedCard(entry: RunFeedEntry) {
 fun FriendSearchBar(viewModel: FollowingViewModel, navController: NavController) {
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val allFriends = viewModel.searchStatus.friendsName
+    val searchStatus by viewModel.searchStatus.collectAsStateWithLifecycle()  // ← collect
+    val allFriends = searchStatus.friendsName
     val filteredFriends = if (query.isBlank()) {
         emptyList()
     } else {

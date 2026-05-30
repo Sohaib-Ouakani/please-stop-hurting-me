@@ -7,6 +7,7 @@ import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface FriendUIState {
@@ -58,7 +59,7 @@ class FollowingViewModel(
 
     // Holds friends names for the search bar
     private val _searchStatus = MutableStateFlow(SearchStatus(emptyList(), emptyList()))
-    val searchStatus: SearchStatus get() = _searchStatus.value
+    val searchStatus: StateFlow<SearchStatus> = _searchStatus.asStateFlow()
 
     init {
         viewModelScope.launch {
