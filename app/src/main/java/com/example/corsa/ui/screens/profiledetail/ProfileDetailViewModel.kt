@@ -52,7 +52,7 @@ class ProfileDetailViewModel(
                 val (profile, runs, userEntry) = coroutineScope {
                     val profileDeferred   = async { profilesRepository.getProfileByUserId(userId) }
                     val runsDeferred      = async { runsRepository.getRunsByUserId(userId) }
-                    val userEntryDeferred = async { profilesRepository.getUserEntryByUserId(userId) }  // 👈 parallel fetch
+                    val userEntryDeferred = async { profilesRepository.getUserEntryByUserId(userId) }
                     Triple(
                         profileDeferred.await(),
                         runsDeferred.await(),

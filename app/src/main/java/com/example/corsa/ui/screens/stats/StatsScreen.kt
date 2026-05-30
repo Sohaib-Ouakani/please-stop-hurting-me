@@ -30,22 +30,13 @@ import com.example.corsa.ui.theme.Spacing
 
 
 @Composable
-fun StatsScreen(navController: NavController) {
+fun StatsScreen(
+    navController: NavController,
+    user: UserEntry,
+    runs: List<Run>
+) {
 
     val cs = MaterialTheme.colorScheme
-    val runentries = listOf<Run>(
-//        Run("1", "J. Donahue", null, "2026-05-26T10:30:00+02:00", null, 5.4),
-//        Run("2", "P. Aolo", null, "2026-05-26T10:30:00+02:00", null, 7.4)
-    )
-    val infoentries = UserEntry(
-        "pippo",
-        null,
-        25f,
-        1,
-        7,
-        100f
-    )
-
     Scaffold(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) },
@@ -53,16 +44,19 @@ fun StatsScreen(navController: NavController) {
         Column(modifier = Modifier.padding(contentPadding)) {
 
             // ── Header: nome + avatar ──────────────────────────────────────
-
-
-            ProfileStats(navController, runentries, infoentries, { ProfileHeader(infoentries, cs) })
+            ProfileStats(
+                navController,
+                runs,
+                user,
+                { ProfileHeader(user, cs) }
+            )
         }
     }
 }
 
 @Composable
 private fun ProfileHeader(
-    infoentries: UserEntry,
+    infoEntries: UserEntry,
     cs: ColorScheme
 ) {
     Row(
@@ -73,7 +67,7 @@ private fun ProfileHeader(
         horizontalArrangement = Arrangement.SpaceBetween, // nome a sx, avatar a dx
     ) {
         Text(
-            text = infoentries.displayName,
+            text = infoEntries.displayName,
             color = cs.onSurface,
             style = MaterialTheme.typography.displayMedium,
             modifier = Modifier.weight(1f), // occupa lo spazio senza spingere l'avatar
@@ -87,7 +81,7 @@ private fun ProfileHeader(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = infoentries.displayName.first().uppercase(),
+                text = infoEntries.displayName.first().uppercase(),
                 style = MaterialTheme.typography.titleMedium,
             )
         }

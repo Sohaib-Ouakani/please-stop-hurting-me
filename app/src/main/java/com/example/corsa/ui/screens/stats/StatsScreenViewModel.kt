@@ -2,17 +2,22 @@ package com.example.corsa.ui.screens.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.corsa.data.model.Profile
+import com.example.corsa.data.model.Run
 import com.example.corsa.data.repositories.ProfilesRepository
+import com.example.corsa.data.repositories.RunsRepository
+import com.example.corsa.ui.composables.UserEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class StatsScreenViewModel(
-    private val profilesRepository: ProfilesRepository
+    private val profilesRepository: ProfilesRepository,
+    private val runsRepository: RunsRepository
 ): ViewModel() {
-    private val _profile = MutableStateFlow<Profile?>(null)
-    val profile: StateFlow<Profile?> = _profile
+    private val _profile = MutableStateFlow<UserEntry?>(null)
+    val profile: StateFlow<UserEntry?> = _profile
+    private val _runs = MutableStateFlow<List<Run>>(listOf())
+    val runs: StateFlow<List<Run>> = _runs
 
     init {
         loadProfile()
@@ -20,7 +25,8 @@ class StatsScreenViewModel(
 
     private fun loadProfile() {
         viewModelScope.launch {
-            _profile.value = profilesRepository.getMyProfile()
+            _profile.value = profilesRepository.getMyUserEntry()
+            _runs.value = runsRepository.getMyRuns()
         }
     }
 }

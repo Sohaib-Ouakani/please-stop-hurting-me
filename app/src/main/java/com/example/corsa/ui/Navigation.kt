@@ -26,6 +26,7 @@ import com.example.corsa.ui.screens.rundetail.RunDetailScreen
 import com.example.corsa.ui.screens.rundetail.RunDetailViewModel
 import com.example.corsa.ui.screens.splash.SplashScreen
 import com.example.corsa.ui.screens.stats.StatsScreen
+import com.example.corsa.ui.screens.stats.StatsScreenViewModel
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -92,7 +93,10 @@ fun CorsaNavGraph(navController: NavHostController) {
                     StopWatchScreen(timerState, navController, homeViewModel.stopWatchActions)
                 }
                 composable<CorsaRoute.StatsScreen> {
-                    StatsScreen(navController = navController)
+                    val statsViewModel = koinViewModel<StatsScreenViewModel>()
+                    val userEntry by statsViewModel.profile.collectAsStateWithLifecycle()
+                    val runs by statsViewModel.runs.collectAsStateWithLifecycle()
+                    userEntry?.let { StatsScreen(navController, it, runs) }
                 }
                 composable<CorsaRoute.FriendsScreen> {
                     val friendsVM = koinViewModel<FriendsViewModel>()

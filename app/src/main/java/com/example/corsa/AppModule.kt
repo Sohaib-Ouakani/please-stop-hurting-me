@@ -13,6 +13,7 @@ import com.example.corsa.ui.screens.home.HomeViewModel
 import com.example.corsa.ui.screens.settings.SettingsViewModel
 import com.example.corsa.ui.screens.profiledetail.ProfileDetailViewModel
 import com.example.corsa.ui.screens.rundetail.RunDetailViewModel
+import com.example.corsa.ui.screens.stats.StatsScreenViewModel
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.compose.auth.ComposeAuth
 import io.github.jan.supabase.compose.auth.googleNativeLogin
@@ -41,6 +42,7 @@ val appModule = module {
 
     viewModel { SessionViewModel(get()) }
     viewModel { SettingsViewModel(get(), get()) }
+    viewModel { StatsScreenViewModel(get(), get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { HomeViewModel() }
     viewModel { FriendsViewModel() }
