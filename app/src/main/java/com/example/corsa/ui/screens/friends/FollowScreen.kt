@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -380,9 +381,10 @@ enum class RankTab(val label: String) {
 fun Rank(viewModel: FollowingViewModel) {
     var rankSelectedTab by remember { mutableStateOf(RankTab.Kilometers) }
     val tabs = RankTab.entries
+    val entries by viewModel.rankEntries.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isRankLoading.collectAsStateWithLifecycle()
 
     LaunchedEffect(rankSelectedTab) {
-        //add function to view model for the order
         viewModel.loadRanking(
             when (rankSelectedTab) {
                 RankTab.Kilometers -> SortBy.Kilometers
@@ -391,26 +393,35 @@ fun Rank(viewModel: FollowingViewModel) {
         )
     }
 
-    val entries by viewModel.rankEntries.collectAsStateWithLifecycle()
-
     Column {
         SecondaryTabRow(selectedTabIndex = tabs.indexOf(rankSelectedTab)) {
             tabs.forEach { tab ->
                 Tab(
                     selected = rankSelectedTab == tab,
-                    onClick = { rankSelectedTab = tab },
-                    text = { Text(tab.label) }
+                    onClick  = { rankSelectedTab = tab },
+                    text     = { Text(tab.label) }
                 )
             }
         }
 
-        RankList(
-            entries = entries,
-            sortBy  = when (rankSelectedTab) {
-                RankTab.Kilometers -> SortBy.Kilometers
-                RankTab.Level      -> SortBy.Level
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),  // ← guaranteed space
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-        )
+        } else {
+            RankList(
+                entries = entries,
+                sortBy  = when (rankSelectedTab) {
+                    RankTab.Kilometers -> SortBy.Kilometers
+                    RankTab.Level      -> SortBy.Level
+                }
+            )
+        }
     }
 }
 

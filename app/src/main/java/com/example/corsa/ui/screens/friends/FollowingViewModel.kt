@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.corsa.data.model.Profile
 import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,6 +57,9 @@ class FollowingViewModel(
     private val _feedEntries = MutableStateFlow<List<RunFeedEntry>>(emptyList())
     val feedEntry: StateFlow<List<RunFeedEntry>> = _feedEntries
 
+    private val _isRankLoading = MutableStateFlow(true)
+    val isRankLoading: StateFlow<Boolean> = _isRankLoading.asStateFlow()
+
     // Cached friends profiles to avoid repeated network calls
     private var cachedFriendProfiles: List<com.example.corsa.data.model.Profile> = emptyList()
 
@@ -93,26 +99,29 @@ class FollowingViewModel(
         }
     }
     suspend fun loadRanking(sortBy: SortBy) {
-        viewModelScope.launch {
-            try {
-                // For each friend, fetch their runs this week via RunsRepository
-                val entries = cachedFriendProfiles.map { profile ->
-                    UserRankEntry(
-                        userId      = profile.id,
-                        displayName = profile.username,
-                        avatarUrl   = profile.avatarPath,
-                        weekKm      = profilesRepository.weeklyKmByUserId(profile.id),
-                        level       = profile.level,
-                    )
-                }
-
-                _rankEntries.value = when (sortBy) {
-                    SortBy.Kilometers -> entries.sortedByDescending { it.weekKm }
-                    SortBy.Level      -> entries.sortedByDescending { it.level }
-                }
-            } catch (e: Exception) {
-                _uiState.value = FriendUIState.Error(e.message ?: "Unknown error")
+        _isRankLoading.value = true
+        try {
+            val entries = coroutineScope {
+                cachedFriendProfiles.map { profile ->
+                    async {
+                        UserRankEntry(
+                            userId      = profile.id,
+                            displayName = profile.username,
+                            avatarUrl   = profile.avatarPath,
+                            weekKm      = profilesRepository.weeklyKmByUserId(profile.id),
+                            level       = profile.level,
+                        )
+                    }
+                }.awaitAll()
             }
+            _rankEntries.value = when (sortBy) {
+                SortBy.Kilometers -> entries.sortedByDescending { it.weekKm }
+                SortBy.Level      -> entries.sortedByDescending { it.level }
+            }
+        } catch (e: Exception) {
+            _uiState.value = FriendUIState.Error(e.message ?: "Unknown error")
+        } finally {
+            _isRankLoading.value = false
         }
     }
 
