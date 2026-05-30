@@ -1,5 +1,6 @@
 package com.example.corsa.ui.screens.rundetail
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -61,10 +62,17 @@ class RunDetailViewModel(
     private fun loadRun() {
         _run.update { null }
         _error.update { null }
+        Log.d("RunDetailVM", "Loading run with id: '$runId'")  // ← check this first
         viewModelScope.launch {
             runCatching { repository.getRunById(runId) }
-                .onSuccess { _run.update { it } }
-                .onFailure { throwable -> _error.update { throwable.message ?: "Unknown error" } }
+                .onSuccess { run ->
+                    Log.d("RunDetailVM", "Loaded run: ${run.id}")
+                    _run.update { run }
+                }
+                .onFailure { throwable ->
+                    Log.e("RunDetailVM", "Failed to load run", throwable)  // logs full stack trace
+                    _error.update { throwable.message ?: "Unknown error" }
+                }
         }
     }
 }

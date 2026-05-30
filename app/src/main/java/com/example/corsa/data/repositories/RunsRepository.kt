@@ -41,8 +41,8 @@ class RunsRepositoryImpl(
 
     override suspend fun getRunById(id: String): Run {
         return supabase
-            .from("runs")
-            .select(Columns.raw("*, ST_AsGeoJSON(path) as path")) {
+            .from("runs_with_geojson")  // ← was "runs"
+            .select {                    // ← drop Columns.raw(...)
                 filter { eq("id", id) }
             }
             .decodeSingle<Run>()
