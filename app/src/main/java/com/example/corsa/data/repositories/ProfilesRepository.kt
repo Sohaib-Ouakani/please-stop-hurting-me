@@ -1,17 +1,19 @@
 package com.example.corsa.data.repositories
 
 import com.example.corsa.ui.composables.UserRankEntry
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
 
 // ── Interface ──────────────────────────────────────────────────────────────
 interface ProfilesRepository {
-    fun getProfileById(userId: String): Flow<UserRankEntry?>
-    fun getAllProfiles(): Flow<List<UserRankEntry>>
+    suspend fun getProfileByUserId(userId: String): UserRankEntry?
+    suspend fun getAllProfiles(): List<UserRankEntry>
 }
 
 // ── Fake implementation ────────────────────────────────────────────────────
-class FakeProfilesRepository : ProfilesRepository {
+class ProfilesRepositoryImpl(
+    private val supabase: SupabaseClient
+) : ProfilesRepository {
 
     private val fakeProfiles = listOf(
         UserRankEntry(
@@ -34,11 +36,27 @@ class FakeProfilesRepository : ProfilesRepository {
         )
     )
 
-    override fun getProfileById(userId: String): Flow<UserRankEntry?> = flow {
-        emit(fakeProfiles.firstOrNull { it.userId == userId })
+    override suspend fun getProfileByUserId(userId: String): UserRankEntry? {
+        return try {
+            supabase.postgrest["profiles"]
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingleOrNull<UserRankEntry>()
+        } catch (e: Exception) {
+            null
+        }
     }
 
-    override fun getAllProfiles(): Flow<List<UserRankEntry>> = flow {
-        emit(fakeProfiles)
+    override suspend fun getAllProfiles(): List<UserRankEntry>  {
+        return try {
+            supabase.postgrest["profiles"]
+                .select()
+                .decodeList<UserRankEntry>()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

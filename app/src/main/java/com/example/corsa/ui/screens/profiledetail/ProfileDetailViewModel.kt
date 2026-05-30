@@ -7,13 +7,12 @@ import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
 import com.example.corsa.ui.composables.RunEntry
 import com.example.corsa.ui.composables.UserRankEntry
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 sealed interface ProfileDetailUiState {
     data object Loading : ProfileDetailUiState
@@ -32,34 +31,51 @@ class ProfileDetailViewModel(
 
     private val userId: String = checkNotNull(savedStateHandle["userId"])
 
-    val state = combine(
-        profilesRepository.getProfileById(userId),
-        runsRepository.getRunsByUser(userId)
-    ) { profile, runs ->
-        if (profile == null) {
-            ProfileDetailUiState.Error("Profilo non trovato.")
-        } else {
-            ProfileDetailUiState.Success(
-                userInfo = profile,
-                runs = runs.map { run ->
-                    RunEntry(
-                        userId      = run.userId,
-                        displayName = profile.displayName,
-                        avatarUrl   = profile.avatarUrl,
-                        startTime   = run.startTime.toString(),
-                        pathUrl     = null,
-                        distance    = (run.distanceMeters / 1000.0)
-                    )
-                }
-            )
-        }
-    }.stateIn(
-        scope        = viewModelScope,
-        started      = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ProfileDetailUiState.Loading
-    )
+    private val _state = MutableStateFlow<ProfileDetailUiState>(ProfileDetailUiState.Loading)
+    val state: StateFlow<ProfileDetailUiState> = _state.asStateFlow()
+
     private val _isFollowing = MutableStateFlow(false)
     val isFollowing: StateFlow<Boolean> = _isFollowing.asStateFlow()
+
+    init {
+        loadProfile()
+    }
+
+    fun loadProfile() {
+        viewModelScope.launch {
+            _state.value = ProfileDetailUiState.Loading
+            try {
+                // Fetch profile and runs concurrently
+                val profileDeferred = async { profilesRepository.getProfileByUserId(userId) }
+                val runsDeferred = async { runsRepository.getRunsByUserId(userId) }
+
+                val profile = profileDeferred.await()
+                val runs = runsDeferred.await()
+
+                _state.value = if (profile == null) {
+                    ProfileDetailUiState.Error("Profilo non trovato.")
+                } else {
+                    ProfileDetailUiState.Success(
+                        userInfo = profile,
+                        runs = runs.map { run ->
+                            RunEntry(
+                                userId      = run.userId,
+                                displayName = profile.displayName,
+                                avatarUrl   = profile.avatarUrl,
+                                startTime   = run.startTime.toString(),
+                                pathUrl     = null,
+                                distance    = run.distanceMeters / 1000.0
+                            )
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = ProfileDetailUiState.Error(
+                    e.message ?: "Errore sconosciuto."
+                )
+            }
+        }
+    }
 
     fun toggleFollow() {
         _isFollowing.update { !it }
