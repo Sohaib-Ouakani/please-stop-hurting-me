@@ -1,13 +1,14 @@
 package com.example.corsa.data.repositories
 
+import com.example.corsa.data.model.Profile
 import com.example.corsa.ui.composables.UserRankEntry
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 
 // ── Interface ──────────────────────────────────────────────────────────────
 interface ProfilesRepository {
-    suspend fun getProfileByUserId(userId: String): UserRankEntry
-    suspend fun getAllProfiles(): List<UserRankEntry>
+    suspend fun getProfileByUserId(userId: String): Profile
+    suspend fun getAllProfiles(): List<Profile>
 }
 
 // ── Fake implementation ────────────────────────────────────────────────────
@@ -36,20 +37,20 @@ class ProfilesRepositoryImpl(
         )
     )
 
-    override suspend fun getProfileByUserId(userId: String): UserRankEntry {
+    override suspend fun getProfileByUserId(userId: String): Profile {
         return supabase.postgrest["profiles"]
                 .select {
                     filter {
                         eq("id", userId)
                     }
                 }
-                .decodeSingle<UserRankEntry>()
+                .decodeSingle<Profile>()
 
     }
 
-    override suspend fun getAllProfiles(): List<UserRankEntry>  {
+    override suspend fun getAllProfiles(): List<Profile>  {
         return supabase.postgrest["profiles"]
                 .select()
-                .decodeList<UserRankEntry>()
+                .decodeList<Profile>()
     }
 }

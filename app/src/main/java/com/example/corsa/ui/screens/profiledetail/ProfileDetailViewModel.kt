@@ -3,6 +3,7 @@ package com.example.corsa.ui.screens.profiledetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.corsa.data.model.Profile
 import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
 import com.example.corsa.ui.composables.RunEntry
@@ -19,7 +20,7 @@ sealed interface ProfileDetailUiState {
     data object Loading : ProfileDetailUiState
     data class Error(val message: String) : ProfileDetailUiState
     data class Success(
-        val userInfo: UserRankEntry,
+        val userInfo: Profile,
         val runs: List<RunEntry>
     ) : ProfileDetailUiState
 }
@@ -58,8 +59,8 @@ class ProfileDetailViewModel(
                     runs = runs.map { run ->
                         RunEntry(
                             userId      = run.userId,
-                            displayName = profile.displayName,
-                            avatarUrl   = profile.avatarUrl,
+                            displayName = profile.username,
+                            avatarUrl   = profile.avatarPath,
                             startTime   = run.startTime.toString(),
                             pathUrl     = null,
                             distance    = run.distanceMeters / 1000.0
