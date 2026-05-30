@@ -244,15 +244,17 @@ private fun GoalCard(
 private fun PermissionRationaleScreen(onRequest: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(cs.background),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "Korsa needs location access\nto track your runs.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = cs.onPrimary
+            color = cs.onBackground
         )
         Spacer(Modifier.height(Spacing.lg))
         Button(onClick = onRequest) {
@@ -266,7 +268,9 @@ private fun PermissionDeniedScreen() {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(cs.background),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -274,7 +278,7 @@ private fun PermissionDeniedScreen() {
             text = "Location permission was denied.\nEnable it in Settings to use Corsa.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = cs.onPrimary
+            color = cs.onBackground
         )
         Spacer(Modifier.height(Spacing.lg))
         Button(onClick = {
