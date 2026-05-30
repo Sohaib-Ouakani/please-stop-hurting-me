@@ -16,9 +16,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.corsa.data.model.Run
 import com.example.corsa.ui.composables.BottomBar
@@ -32,24 +36,31 @@ import com.example.corsa.ui.theme.Spacing
 @Composable
 fun StatsScreen(
     navController: NavController,
-    user: UserEntry,
-    runs: List<Run>
+    viewModel: StatsScreenViewModel
 ) {
-
+    val user by viewModel.profile.collectAsStateWithLifecycle()
+    val runs by viewModel.runs.collectAsStateWithLifecycle()
     val cs = MaterialTheme.colorScheme
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            viewModel.refreshProfile()
+        }
+    }
     Scaffold(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) },
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
-
-            // ── Header: nome + avatar ──────────────────────────────────────
-            ProfileStats(
-                navController,
-                runs,
-                user,
-                { ProfileHeader(user, cs) }
-            )
+            if (user != null) {
+                ProfileStats(
+                    navController,
+                    runs,
+                    user!!,
+                    { ProfileHeader(user!!, cs) }
+                )
+            }
         }
     }
 }

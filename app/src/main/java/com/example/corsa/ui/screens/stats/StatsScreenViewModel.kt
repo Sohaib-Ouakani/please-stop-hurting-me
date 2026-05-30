@@ -23,6 +23,13 @@ class StatsScreenViewModel(
         loadProfile()
     }
 
+    fun refreshProfile() {
+        viewModelScope.launch {
+            _profile.value = profilesRepository.getMyUserEntry()
+            _runs.value = runsRepository.getMyRuns()
+        }
+    }
+
     private fun loadProfile() {
         viewModelScope.launch {
             _profile.value = profilesRepository.getMyUserEntry()
