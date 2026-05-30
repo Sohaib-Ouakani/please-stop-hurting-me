@@ -3,7 +3,7 @@ package com.example.corsa.ui.screens.profiledetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.corsa.data.repositories.ProfileRepository
+import com.example.corsa.data.repositories.ProfilesRepository
 import com.example.corsa.data.repositories.RunsRepository
 import com.example.corsa.ui.composables.RunEntry
 import com.example.corsa.ui.composables.UserRankEntry
@@ -25,7 +25,7 @@ sealed interface ProfileDetailUiState {
 }
 
 class ProfileDetailViewModel(
-    private val profileRepository: ProfileRepository,
+    private val profilesRepository: ProfilesRepository,
     private val runsRepository: RunsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -33,7 +33,7 @@ class ProfileDetailViewModel(
     private val userId: String = checkNotNull(savedStateHandle["userId"])
 
     val state = combine(
-        profileRepository.getProfileById(userId),
+        profilesRepository.getProfileById(userId),
         runsRepository.getRunsByUser(userId)
     ) { profile, runs ->
         if (profile == null) {

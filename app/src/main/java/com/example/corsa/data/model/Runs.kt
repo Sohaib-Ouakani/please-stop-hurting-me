@@ -2,13 +2,11 @@ package com.example.corsa.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.time.ZonedDateTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @Serializable
-data class Run @OptIn(ExperimentalUuidApi::class) constructor(
+data class Runs @OptIn(ExperimentalUuidApi::class) constructor(
     val id: String,
     @SerialName("user_id")
     val userId: String,
@@ -31,7 +29,7 @@ data class Run @OptIn(ExperimentalUuidApi::class) constructor(
 )
 
 @Serializable
-data class RunInsert(
+data class RunsInsert(
      val id: String,
      @SerialName("user_id")
      val userId: String,

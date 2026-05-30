@@ -5,13 +5,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 // ── Interface ──────────────────────────────────────────────────────────────
-interface ProfileRepository {
+interface ProfilesRepository {
     fun getProfileById(userId: String): Flow<UserRankEntry?>
     fun getAllProfiles(): Flow<List<UserRankEntry>>
 }
 
 // ── Fake implementation ────────────────────────────────────────────────────
-class FakeProfileRepository : ProfileRepository {
+class FakeProfilesRepository : ProfilesRepository {
 
     private val fakeProfiles = listOf(
         UserRankEntry(

@@ -18,7 +18,7 @@ data class Follows @OptIn(ExperimentalUuidApi::class) constructor(
 )
 
 @Serializable
-data class FollowInsert(
+data class FollowsInsert(
     @SerialName("follower_id")
     val followerId: String,
 

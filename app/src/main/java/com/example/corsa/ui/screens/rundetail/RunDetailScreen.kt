@@ -1,6 +1,5 @@
 package com.example.corsa.ui.screens.rundetail
 
-import android.graphics.Color
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -40,13 +39,9 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.Feature
-import org.maplibre.geojson.FeatureCollection
-import org.maplibre.geojson.LineString
 import androidx.core.graphics.toColorInt
 import com.example.corsa.utils.latLngs
 import com.example.corsa.utils.parseRunGeoJson
-import org.maplibre.geojson.Polygon
 
 
 private const val ROUTE_SOURCE_ID = "run-route-source"
@@ -345,7 +340,7 @@ fun UserDateRow(
 // ── Stat cards ────────────────────────────────────────────────────────────
 
 @Composable
-fun StatCardsGrid(run: com.example.corsa.data.model.Run) {
+fun StatCardsGrid(run: com.example.corsa.data.model.Runs) {
     // Build the list dynamically so optional stats appear only when present
     val stats = buildList {
         add("Distance"  to formatDistance(run.distanceMeters))
