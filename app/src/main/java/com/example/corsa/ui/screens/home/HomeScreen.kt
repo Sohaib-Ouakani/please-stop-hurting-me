@@ -17,14 +17,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
 import com.example.corsa.ui.composables.BottomBar
 import com.example.corsa.ui.composables.TopBar
+import com.example.corsa.ui.screens.splash.SplashScreen
 import com.example.corsa.ui.theme.Size
 import com.example.corsa.ui.theme.Spacing
 
@@ -43,11 +41,28 @@ import com.example.corsa.ui.theme.Spacing
  */
 @Composable
 fun HomeScreen(
-    state: HomeState,
+    state: HomeState?,
     navController: NavController
 ) {
     val cs = MaterialTheme.colorScheme
 
+    if (state == null) {
+        SplashScreen()
+    } else {
+       Content(
+           cs,
+           navController,
+           state
+       )
+    }
+}
+
+@Composable
+private fun Content(
+    cs: ColorScheme,
+    navController: NavController,
+    state: HomeState
+) {
     Scaffold(
         topBar = { TopBar(navController) },
         bottomBar = { BottomBar(navController) }
@@ -159,9 +174,9 @@ private fun LocationLabel(cs: ColorScheme, locationName: String) {
 @Composable
 private fun GoalCard(
     cs: ColorScheme,
-    goalKm: Double,
-    currentKm: Double,
-    progress: Double
+    goalKm: Float,
+    currentKm: Float,
+    progress: Float
 ) {
     Card(
         modifier = Modifier

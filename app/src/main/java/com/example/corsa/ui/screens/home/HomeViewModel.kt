@@ -3,6 +3,12 @@ package com.example.corsa.ui.screens.home
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.corsa.data.model.Profile
+import com.example.corsa.data.model.Run
+import com.example.corsa.data.repositories.AuthRepository
+import com.example.corsa.data.repositories.ProfilesRepository
+import com.example.corsa.data.repositories.RunsRepository
+import com.example.corsa.ui.composables.UserEntry
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -14,9 +20,9 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 data class HomeState(
-    val goalKm: Double,
-    val currentKm: Double,
-    val progress: Double,
+    val goalKm: Float,
+    val currentKm: Float,
+    val progress: Float,
     val locationName: String
 )
 
@@ -46,18 +52,41 @@ data class StopWatchAction(
     val stop: () -> Unit,
 )
 
-class HomeViewModel: ViewModel() {
+class HomeViewModel(
+    private val runsRepository: RunsRepository,
+    private val profilesRepository: ProfilesRepository
+): ViewModel() {
     val stopWatchActions = StopWatchAction(
         { start() },
         { pause() },
         { reset() }
     )
-    val state = HomeState(
-        50.0,
-        25.0,
-        0.5,
-        "Galeata"
-    )
+    private val _profile = MutableStateFlow<Profile?>(null)
+    val profile: StateFlow<Profile?> = _profile
+
+    // Derived from profile reactively
+    private val _state = MutableStateFlow<HomeState?>(null)
+    val state: StateFlow<HomeState?> = _state
+
+    init {
+        loadProfile()
+    }
+
+    private fun loadProfile() {
+        viewModelScope.launch {
+            val loaded = profilesRepository.getMyProfile()
+            val weeklyKm = profilesRepository.weeklyKmByUserId(loaded.id)
+            val goalKm = loaded.level * 10f
+
+            _profile.value = loaded
+            _state.value = HomeState(
+                goalKm = goalKm,
+                currentKm = weeklyKm,
+                progress = weeklyKm / goalKm,
+                locationName = "Galeata"
+            )
+        }
+    }
 
     private val _timerState = MutableStateFlow(StopWatchStatus())
     val timerState: StateFlow<StopWatchStatus> = _timerState

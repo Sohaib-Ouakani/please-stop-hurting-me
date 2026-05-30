@@ -84,7 +84,7 @@ fun CorsaNavGraph(navController: NavHostController) {
                 }
                 composable<CorsaRoute.Home> {
                     val homeViewModel = koinViewModel<HomeViewModel>()
-                    val state = homeViewModel.state
+                    val state by homeViewModel.state.collectAsStateWithLifecycle()
                     HomeScreen(state, navController)
                 }
                 composable<CorsaRoute.StopWatchScreen> {
