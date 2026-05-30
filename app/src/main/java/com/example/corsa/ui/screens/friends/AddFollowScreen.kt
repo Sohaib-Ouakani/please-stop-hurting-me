@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.corsa.ui.CorsaRoute
 import com.example.corsa.ui.composables.BackTopBar
@@ -35,14 +36,12 @@ fun AddFollowScreen(
     var query by remember { mutableStateOf("") }
 
     // Replace with real ViewModel state
-    val results by remember(query, viewModel.searchStatus.notFriends) {
-        mutableStateOf(
-            if (query.isBlank()) {
-                viewModel.searchStatus.notFriends
-            } else {
-                viewModel.searchStatus.notFriends.filter { it.username.contains(query, ignoreCase = true) }
-            }
-        )
+    val searchStatus by viewModel.searchStatus.collectAsStateWithLifecycle()  // ← collect
+
+    val results = if (query.isBlank()) {
+        searchStatus.notFriends
+    } else {
+        searchStatus.notFriends.filter { it.username.contains(query, ignoreCase = true) }
     }
 
     Scaffold(
@@ -90,7 +89,8 @@ fun AddFollowScreen(
 fun SearchBar(viewModel: FollowingViewModel, navController: NavController) {
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val suggested = viewModel.searchStatus.notFriends
+    val searchStatus by viewModel.searchStatus.collectAsStateWithLifecycle()  // ← collect
+    val suggested = searchStatus.notFriends
     val filteredSuggested = if (query.isBlank()) {
         suggested
     } else {
